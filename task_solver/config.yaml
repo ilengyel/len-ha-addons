@@ -2,7 +2,7 @@ name: Task Solver
 version: 0.1.0
 slug: task_solver
 description: Touch-first task tracker for household chores and repeatable checklists.
-url: https://example.invalid/task-solver
+url: https://example.invalid/ha-addons/tree/main/task_solver
 startup: application
 boot: auto
 panel_icon: mdi:clipboard-check-outline

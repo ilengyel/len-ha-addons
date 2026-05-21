@@ -2,3 +2,4 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 data/task_solver.db
+task_solver/data/task_solver.db

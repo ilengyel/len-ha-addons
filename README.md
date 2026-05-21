@@ -1,19 +1,44 @@
-# Task Solver Add-on
+# ha-addons
+
+This repository is a Home Assistant add-on repository prepared for Git-based installation. The current add-on lives in `task_solver\`.
+
+## Included add-ons
+
+### `task_solver`
 
 Task Solver is a Home Assistant add-on that exposes a touch-first task board for shared household chores and repeatable checklists. It is designed for a wall-mounted tablet workflow, so people can quickly open the board, start a task, work through its checklist, record who completed it, and review recent activity.
 
-## Purpose
-
-- Keep recurring chores and small maintenance jobs visible on a shared screen.
-- Make repeatable tasks easy to complete with per-task checklist steps.
-- Record who finished a task and when, then surface that history in reports.
-
-## What the add-on provides
+It provides:
 
 - A board view for creating, renaming, and removing tasks.
 - A completion flow that lets a person pick themselves and tick checklist items.
 - Recent completion history and a reports screen.
 - Home Assistant add-on packaging with ingress support and direct access on port `8099`.
+
+## Repository layout
+
+```text
+repository.yaml
+task_solver/
+  config.yaml
+  Dockerfile
+  requirements.txt
+  app/
+  rootfs/
+  tests/
+```
+
+## Local development
+
+Run tests from the repository root:
+
+```powershell
+python -m pytest -q
+```
+
+## Publishing note
+
+Before adding this repository to Home Assistant from a Git URL, update the placeholder URLs and maintainer details in `repository.yaml` and `task_solver\config.yaml`.
 
 ## Browser compatibility requirement
 
