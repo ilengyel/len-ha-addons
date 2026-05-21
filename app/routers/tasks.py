@@ -8,28 +8,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import session_dependency
-from app.models import ChecklistItem, Task
+from app.models import ChecklistItem, Task, TaskRun
+from app.utils import resolve_return_to
 from app.web import templates
 
 
 router = APIRouter()
-
-DOMAIN_OPTIONS = [
-    "Household",
-    "Maintenance",
-    "Garden",
-    "Education",
-    "Workshop",
-    "Office",
-]
-
-SUGGESTED_DOMAINS = [
-    "Rental turnover checklists",
-    "Small office opening and closing routines",
-    "Workshop safety inspections",
-    "Classroom cleanup rotations",
-    "Pool and garden maintenance",
-]
 
 
 def load_tasks(session: Session):
@@ -37,6 +21,13 @@ def load_tasks(session: Session):
         select(Task)
         .options(selectinload(Task.checklist_items))
         .order_by(Task.created_at.desc(), Task.id.desc())
+    )
+    return list(result)
+
+
+def load_recent_runs(session: Session):
+    result = session.scalars(
+        select(TaskRun).order_by(TaskRun.completed_at.desc(), TaskRun.id.desc()).limit(10)
     )
     return list(result)
 
@@ -50,7 +41,13 @@ def render_index(
     message = None
     error = error or None
     if request.query_params.get("created") == "1":
-        message = "Task added. Add checklist items, then tap the task to record a completion."
+        message = "Task added. Tap it to add checklist items and record a completion."
+    elif request.query_params.get("completed") == "1":
+        message = "Completion recorded."
+    elif request.query_params.get("renamed") == "1":
+        message = "Task renamed."
+    elif request.query_params.get("deleted") == "1":
+        message = "Task removed."
     elif request.query_params.get("updated") == "1":
         message = "Checklist updated."
     elif request.query_params.get("error") == "title":
@@ -61,8 +58,7 @@ def render_index(
         "index.html",
         {
             "tasks": load_tasks(session),
-            "domain_options": DOMAIN_OPTIONS,
-            "suggested_domains": SUGGESTED_DOMAINS,
+            "recent_runs": load_recent_runs(session),
             "error": error,
             "message": message,
         },
@@ -83,23 +79,70 @@ def create_task(
 ) -> RedirectResponse:
     trimmed_title = title.strip()
     if not trimmed_title:
-        return RedirectResponse(url="/?error=title", status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(url="/?error=title#add-task", status_code=status.HTTP_303_SEE_OTHER)
 
     task = Task(title=trimmed_title, domain=domain or "Household")
     session.add(task)
     session.commit()
-    return RedirectResponse(url="/?created=1#new-task", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url=f"/?created=1#task-{task.id}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+@router.post("/tasks/{task_id}/edit")
+def edit_task(
+    task_id: int,
+    title: str = Form(...),
+    return_to: str = Form("/"),
+    session: Session = Depends(session_dependency),
+) -> RedirectResponse:
+    task = session.get(Task, task_id)
+    if task is None:
+        return RedirectResponse(
+            url=resolve_return_to(return_to, "/"),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
+
+    trimmed_title = title.strip()
+    if trimmed_title:
+        task.title = trimmed_title
+        session.commit()
+
+    default_url = f"/?renamed=1#task-{task_id}"
+    return RedirectResponse(
+        url=resolve_return_to(return_to, default_url),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/tasks/{task_id}/delete")
+def delete_task(
+    task_id: int,
+    return_to: str = Form("/"),
+    session: Session = Depends(session_dependency),
+) -> RedirectResponse:
+    task = session.get(Task, task_id)
+    if task is not None:
+        session.delete(task)
+        session.commit()
+
+    return RedirectResponse(
+        url=resolve_return_to(return_to, "/?deleted=1"),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.post("/tasks/{task_id}/checklist")
 def add_checklist_item(
     task_id: int,
     title: str = Form(...),
+    return_to: str = Form("/"),
     session: Session = Depends(session_dependency),
 ) -> RedirectResponse:
     task = session.get(Task, task_id)
     if task is None:
-        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(
+            url=resolve_return_to(return_to, "/"),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
 
     trimmed_title = title.strip()
     if trimmed_title:
@@ -107,7 +150,11 @@ def add_checklist_item(
         session.add(ChecklistItem(task_id=task.id, title=trimmed_title, sort_order=next_order))
         session.commit()
 
-    return RedirectResponse(url="/?updated=1", status_code=status.HTTP_303_SEE_OTHER)
+    default_url = f"/?updated=1#task-{task_id}"
+    return RedirectResponse(
+        url=resolve_return_to(return_to, default_url),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.post("/tasks/{task_id}/checklist/{item_id}/edit")
@@ -115,24 +162,33 @@ def edit_checklist_item(
     task_id: int,
     item_id: int,
     title: str = Form(...),
+    return_to: str = Form("/"),
     session: Session = Depends(session_dependency),
 ) -> RedirectResponse:
     item = session.get(ChecklistItem, item_id)
     if item is None or item.task_id != task_id:
-        return RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+        return RedirectResponse(
+            url=resolve_return_to(return_to, "/"),
+            status_code=status.HTTP_303_SEE_OTHER,
+        )
 
     trimmed_title = title.strip()
     if trimmed_title:
         item.title = trimmed_title
         session.commit()
 
-    return RedirectResponse(url="/?updated=1", status_code=status.HTTP_303_SEE_OTHER)
+    default_url = f"/?updated=1#task-{task_id}"
+    return RedirectResponse(
+        url=resolve_return_to(return_to, default_url),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.post("/tasks/{task_id}/checklist/{item_id}/delete")
 def delete_checklist_item(
     task_id: int,
     item_id: int,
+    return_to: str = Form("/"),
     session: Session = Depends(session_dependency),
 ) -> RedirectResponse:
     item = session.get(ChecklistItem, item_id)
@@ -150,4 +206,8 @@ def delete_checklist_item(
             remaining_item.sort_order = index
         session.commit()
 
-    return RedirectResponse(url="/?updated=1", status_code=status.HTTP_303_SEE_OTHER)
+    default_url = f"/?updated=1#task-{task_id}"
+    return RedirectResponse(
+        url=resolve_return_to(return_to, default_url),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )

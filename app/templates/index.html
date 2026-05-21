@@ -7,9 +7,25 @@
     <div>
         <p class="eyebrow">Task board</p>
         <h1>Shared chores and checklists</h1>
-        <p class="intro">Tap a task to start the completion flow. Each run records who did the work and when it happened.</p>
+        <p class="intro">Tap a task to start it. Use the add icon to create another one.</p>
     </div>
-    <a class="button button-secondary" href="/reports">View reports</a>
+    <details class="editor-menu" id="add-task" {% if error %}open{% endif %}>
+        <summary class="icon-button" aria-label="Add task">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            <span class="sr-only">Add task</span>
+        </summary>
+        <div class="editor-panel">
+            <form class="stack-form" action="/tasks" method="post">
+                <label for="task-title">Task title</label>
+                <div class="input-row">
+                    <input id="task-title" name="title" type="text" maxlength="200" placeholder="Example: Clean the pool" required>
+                    <button class="button button-small" type="submit">Add</button>
+                </div>
+            </form>
+        </div>
+    </details>
 </section>
 
 {% if message %}
@@ -20,82 +36,67 @@
 <section class="notice error">{{ error }}</section>
 {% endif %}
 
-<section class="layout-grid">
-    <div class="stack">
+<section class="board-layout">
+    <div class="board-stack">
         {% if tasks %}
             {% for task in tasks %}
-            <article class="task-card card">
-                <a class="task-card__tap" href="/tasks/{{ task.id }}/complete">
-                    <div>
-                        <p class="task-card__domain">{{ task.domain }}</p>
-                        <h2>{{ task.title }}</h2>
-                    </div>
-                    <span class="task-card__cta">Start</span>
-                </a>
-
-                <div class="task-card__body">
-                    <h3>Checklist</h3>
-                    {% if task.checklist_items %}
-                    <ul class="checklist-editor">
-                        {% for item in task.checklist_items %}
-                        <li>
-                            <form class="inline-edit" action="/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
-                                <input name="title" type="text" value="{{ item.title }}" maxlength="200" required>
-                                <button class="button button-small" type="submit">Save</button>
+            <article class="task-card card" id="task-{{ task.id }}">
+                <div class="task-card__summary task-card__summary--board">
+                    <a class="task-card__launch" href="/tasks/{{ task.id }}/complete">
+                        <div class="task-card__heading">
+                            <h2>{{ task.title }}</h2>
+                            <p class="task-card__meta">{{ task.domain }}</p>
+                        </div>
+                    </a>
+                    <details class="editor-menu">
+                        <summary class="icon-button" aria-label="Edit {{ task.title }}">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 20h4l10-10-4-4L4 16v4z"></path>
+                                <path d="M12 6l4 4"></path>
+                            </svg>
+                            <span class="sr-only">Edit {{ task.title }}</span>
+                        </summary>
+                        <div class="editor-panel">
+                            <form class="stack-form" action="/tasks/{{ task.id }}/edit" method="post">
+                                <input type="hidden" name="return_to" value="/?renamed=1#task-{{ task.id }}">
+                                <label for="task-{{ task.id }}-title">Rename task</label>
+                                <div class="input-row">
+                                    <input id="task-{{ task.id }}-title" name="title" type="text" value="{{ task.title }}" maxlength="200" required>
+                                    <button class="button button-small" type="submit">Save</button>
+                                </div>
                             </form>
-                            <form action="/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
+                            <form action="/tasks/{{ task.id }}/delete" method="post">
+                                <input type="hidden" name="return_to" value="/?deleted=1">
                                 <button class="button button-ghost button-small" type="submit">Remove</button>
                             </form>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <p class="muted">Add at least one checklist item before this task can be completed.</p>
-                    {% endif %}
-
-                    <form class="stack-form" action="/tasks/{{ task.id }}/checklist" method="post">
-                        <label for="checklist-{{ task.id }}">Add checklist item</label>
-                        <div class="input-row">
-                            <input id="checklist-{{ task.id }}" name="title" type="text" maxlength="200" placeholder="Example: Put away clean plates" required>
-                            <button class="button" type="submit">Add</button>
                         </div>
-                    </form>
+                    </details>
                 </div>
             </article>
             {% endfor %}
         {% else %}
         <section class="card empty-state">
             <h2>No tasks yet</h2>
-            <p>Start with a household routine, then add other domains as you expand the app.</p>
+            <p>Use the add icon above, then tap the task to start the flow.</p>
         </section>
         {% endif %}
     </div>
 
-    <aside class="stack sidebar">
-        <section class="card">
-            <p class="eyebrow">Other domains</p>
-            <ul class="plain-list">
-                {% for domain in suggested_domains %}
-                <li>{{ domain }}</li>
+    <aside class="board-sidebar">
+        <section class="history-card card">
+            <h2>Recently completed</h2>
+            {% if recent_runs %}
+            <ul class="history-list">
+                {% for run in recent_runs %}
+                <li>
+                    <strong>{{ run.task_title_snapshot }}</strong>
+                    <span class="history-meta">{{ run.user_name_snapshot }} at {{ run.completed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                </li>
                 {% endfor %}
             </ul>
-        </section>
-
-        <section class="card sticky-composer" id="new-task">
-            <p class="eyebrow">Add task</p>
-            <form class="stack-form" action="/tasks" method="post">
-                <label for="task-title">Task title</label>
-                <input id="task-title" name="title" type="text" maxlength="200" placeholder="Example: Clean the pool" required>
-
-                <label for="task-domain">Domain</label>
-                <select id="task-domain" name="domain">
-                    {% for option in domain_options %}
-                    <option value="{{ option }}">{{ option }}</option>
-                    {% endfor %}
-                </select>
-
-                <button class="button button-wide" type="submit">Add task at bottom</button>
-            </form>
+            {% else %}
+            <p class="muted">No completions recorded yet.</p>
+            {% endif %}
         </section>
     </aside>
 </section>

@@ -9,3 +9,7 @@ def test_index_renders() -> None:
 
     assert response.status_code == 200
     assert "Task Solver" in response.text
+    assert "Other domains" not in response.text
+    assert 'id="add-task"' in response.text
+    assert "View reports" not in response.text
+    assert "Recently completed" in response.text

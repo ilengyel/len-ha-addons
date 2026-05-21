@@ -9,10 +9,50 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.db import session_dependency
 from app.models import Task, TaskRun, TaskRunItem, User
+from app.utils import resolve_return_to
 from app.web import templates
 
 
 router = APIRouter()
+
+
+@router.post("/users")
+def create_user(
+    name: str = Form(...),
+    return_to: str = Form("/"),
+    session: Session = Depends(session_dependency),
+) -> RedirectResponse:
+    trimmed = name.strip()
+    if trimmed:
+        existing = session.scalar(
+            select(User).where(func.lower(User.name) == trimmed.lower())
+        )
+        if existing is None:
+            session.add(User(name=trimmed))
+            session.commit()
+    return RedirectResponse(
+        url=resolve_return_to(return_to, "/"),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
+
+
+@router.post("/users/{user_id}/edit")
+def edit_user(
+    user_id: int,
+    name: str = Form(...),
+    return_to: str = Form("/"),
+    session: Session = Depends(session_dependency),
+) -> RedirectResponse:
+    user = session.get(User, user_id)
+    if user is not None:
+        trimmed = name.strip()
+        if trimmed:
+            user.name = trimmed
+            session.commit()
+    return RedirectResponse(
+        url=resolve_return_to(return_to, "/"),
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 def load_task(session: Session, task_id: int) -> Optional[Task]:
@@ -172,4 +212,4 @@ def complete_task(
         )
 
     session.commit()
-    return RedirectResponse(url="/reports?created=1", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/?completed=1", status_code=status.HTTP_303_SEE_OTHER)

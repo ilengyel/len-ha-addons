@@ -29,7 +29,10 @@ class Task(Base):
         cascade="all, delete-orphan",
         order_by="ChecklistItem.sort_order",
     )
-    runs: Mapped[List["TaskRun"]] = relationship(back_populates="task")
+    runs: Mapped[List["TaskRun"]] = relationship(
+        back_populates="task",
+        cascade="all, delete-orphan",
+    )
 
 
 class ChecklistItem(Base):
