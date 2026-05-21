@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+{% if message %}
+<section class="notice success">{{ message }}</section>
+{% endif %}
+
+<section class="hero card">
+    <div>
+        <p class="eyebrow">Reporting</p>
+        <h1>Completion history and simple summaries</h1>
+        <p class="intro">Use this first view to answer who completed each task and which routines happen most often.</p>
+    </div>
+    <a class="button button-secondary" href="/">Back to board</a>
+</section>
+
+<section class="layout-grid">
+    <section class="history-card card">
+        <h2>Recent completions</h2>
+        {% if recent_runs %}
+        <ul class="history-list">
+            {% for run in recent_runs %}
+            <li>
+                <strong>{{ run.task_title_snapshot }}</strong>
+                <span class="history-meta">Completed by {{ run.user_name_snapshot }} at {{ run.completed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No completions recorded yet.</p>
+        {% endif %}
+    </section>
+
+    <div class="sidebar">
+        <section class="summary-card card">
+            <h2>By person</h2>
+            {% if user_summary %}
+            <ul class="summary-list">
+                {% for name, total in user_summary %}
+                <li>
+                    <strong>{{ name }}</strong>
+                    <span class="summary-meta">{{ total }} completions</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="muted">No users have completed tasks yet.</p>
+            {% endif %}
+        </section>
+
+        <section class="summary-card card">
+            <h2>By task</h2>
+            {% if task_summary %}
+            <ul class="summary-list">
+                {% for title, total in task_summary %}
+                <li>
+                    <strong>{{ title }}</strong>
+                    <span class="summary-meta">{{ total }} completions</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="muted">No tasks have been completed yet.</p>
+            {% endif %}
+        </section>
+    </div>
+</section>
+{% endblock %}

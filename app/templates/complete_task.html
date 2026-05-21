@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Complete {{ task.title }}{% endblock %}
+
+{% block content %}
+<section class="flow-card card">
+    <div class="flow-header">
+        <div>
+            <p class="eyebrow">Completion flow</p>
+            <h1>{{ task.title }}</h1>
+            <p class="muted">Choose who completed the task, then tick each checklist item to record the run.</p>
+        </div>
+        <span class="pill">{{ task.domain }}</span>
+    </div>
+
+    {% if error %}
+    <section class="notice error">{{ error }}</section>
+    {% endif %}
+
+    <form class="run-form" method="post" action="/tasks/{{ task.id }}/complete">
+        <label for="existing-user">Who completed this task?</label>
+        <select id="existing-user" name="existing_user_id" data-existing-user>
+            <option value="">Select an existing person</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if selected_user_id == user.id %}selected{% endif %}>{{ user.name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="new-user-name">Or add a new person</label>
+        <input
+            id="new-user-name"
+            name="new_user_name"
+            type="text"
+            maxlength="120"
+            value="{{ new_user_name }}"
+            placeholder="Example: Alex"
+            data-new-user
+        >
+
+        <section>
+            <h2>Checklist</h2>
+            {% if task.checklist_items %}
+            <ul class="run-checklist">
+                {% for item in task.checklist_items %}
+                <li>
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="completed_item_ids"
+                            value="{{ item.id }}"
+                            {% if item.id in checked_item_ids %}checked{% endif %}
+                        >
+                        {{ item.title }}
+                    </label>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="muted">This task cannot be completed yet because it has no checklist items.</p>
+            {% endif %}
+        </section>
+
+        <div class="split-row">
+            <button class="button button-wide" type="submit">Mark task as done</button>
+            <a class="button button-secondary button-wide" href="/">Back to board</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

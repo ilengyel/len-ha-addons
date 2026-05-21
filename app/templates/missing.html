@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Missing item{% endblock %}
+
+{% block content %}
+<section class="card empty-state">
+    <h1>{{ message }}</h1>
+    <a class="button" href="/">Return to board</a>
+</section>
+{% endblock %}

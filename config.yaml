@@ -1,0 +1,26 @@
+name: Task Solver
+version: 0.1.0
+slug: task_solver
+description: Touch-first task tracker for household chores and repeatable checklists.
+url: https://example.invalid/task-solver
+startup: application
+boot: auto
+panel_icon: mdi:clipboard-check-outline
+ingress: true
+ingress_port: 8099
+homeassistant_api: false
+map:
+  - addon_config:rw
+options:
+  log_level: info
+schema:
+  log_level: list(trace|debug|info|notice|warning|error|fatal)
+ports:
+  8099/tcp: null
+ports_description:
+  8099/tcp: Task Solver direct access port
+arch:
+  - aarch64
+  - amd64
+  - armv7
+  - i386

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Task Solver{% endblock %}
+
+{% block content %}
+<section class="hero card">
+    <div>
+        <p class="eyebrow">Task board</p>
+        <h1>Shared chores and checklists</h1>
+        <p class="intro">Tap a task to start the completion flow. Each run records who did the work and when it happened.</p>
+    </div>
+    <a class="button button-secondary" href="/reports">View reports</a>
+</section>
+
+{% if message %}
+<section class="notice success">{{ message }}</section>
+{% endif %}
+
+{% if error %}
+<section class="notice error">{{ error }}</section>
+{% endif %}
+
+<section class="layout-grid">
+    <div class="stack">
+        {% if tasks %}
+            {% for task in tasks %}
+            <article class="task-card card">
+                <a class="task-card__tap" href="/tasks/{{ task.id }}/complete">
+                    <div>
+                        <p class="task-card__domain">{{ task.domain }}</p>
+                        <h2>{{ task.title }}</h2>
+                    </div>
+                    <span class="task-card__cta">Start</span>
+                </a>
+
+                <div class="task-card__body">
+                    <h3>Checklist</h3>
+                    {% if task.checklist_items %}
+                    <ul class="checklist-editor">
+                        {% for item in task.checklist_items %}
+                        <li>
+                            <form class="inline-edit" action="/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
+                                <input name="title" type="text" value="{{ item.title }}" maxlength="200" required>
+                                <button class="button button-small" type="submit">Save</button>
+                            </form>
+                            <form action="/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
+                                <button class="button button-ghost button-small" type="submit">Remove</button>
+                            </form>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="muted">Add at least one checklist item before this task can be completed.</p>
+                    {% endif %}
+
+                    <form class="stack-form" action="/tasks/{{ task.id }}/checklist" method="post">
+                        <label for="checklist-{{ task.id }}">Add checklist item</label>
+                        <div class="input-row">
+                            <input id="checklist-{{ task.id }}" name="title" type="text" maxlength="200" placeholder="Example: Put away clean plates" required>
+                            <button class="button" type="submit">Add</button>
+                        </div>
+                    </form>
+                </div>
+            </article>
+            {% endfor %}
+        {% else %}
+        <section class="card empty-state">
+            <h2>No tasks yet</h2>
+            <p>Start with a household routine, then add other domains as you expand the app.</p>
+        </section>
+        {% endif %}
+    </div>
+
+    <aside class="stack sidebar">
+        <section class="card">
+            <p class="eyebrow">Other domains</p>
+            <ul class="plain-list">
+                {% for domain in suggested_domains %}
+                <li>{{ domain }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section class="card sticky-composer" id="new-task">
+            <p class="eyebrow">Add task</p>
+            <form class="stack-form" action="/tasks" method="post">
+                <label for="task-title">Task title</label>
+                <input id="task-title" name="title" type="text" maxlength="200" placeholder="Example: Clean the pool" required>
+
+                <label for="task-domain">Domain</label>
+                <select id="task-domain" name="domain">
+                    {% for option in domain_options %}
+                    <option value="{{ option }}">{{ option }}</option>
+                    {% endfor %}
+                </select>
+
+                <button class="button button-wide" type="submit">Add task at bottom</button>
+            </form>
+        </section>
+    </aside>
+</section>
+{% endblock %}

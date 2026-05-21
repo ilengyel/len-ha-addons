@@ -1,0 +1,363 @@
+:root {
+    --ink: #1f1b16;
+    --muted: #6c5f50;
+    --paper: rgba(255, 252, 245, 0.92);
+    --paper-strong: #fff8ef;
+    --border: #d2bda4;
+    --accent: #ac4b2c;
+    --accent-deep: #7f3018;
+    --accent-soft: #f0dbcc;
+    --success-bg: #e7f4e5;
+    --success-border: #9cbc94;
+    --error-bg: #f9e0dc;
+    --error-border: #d68072;
+    --shadow: 0 16px 38px rgba(88, 56, 27, 0.12);
+}
+
+html, body {
+    margin: 0;
+    min-height: 100%;
+    font-family: Georgia, "Times New Roman", serif;
+    background:
+        radial-gradient(circle at top, rgba(221, 168, 111, 0.22), transparent 32%),
+        linear-gradient(180deg, #f6f0e2 0%, #efe5cf 100%);
+    color: var(--ink);
+}
+
+body {
+    line-height: 1.45;
+}
+
+a {
+    color: inherit;
+}
+
+.shell {
+    max-width: 68rem;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 2rem;
+}
+
+.site-header,
+.site-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0 1rem;
+}
+
+.site-footer {
+    color: var(--muted);
+    font-size: 0.95rem;
+    padding-top: 1.5rem;
+}
+
+.brand {
+    text-decoration: none;
+}
+
+.brand-mark {
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    color: var(--accent-deep);
+}
+
+.brand-name {
+    display: block;
+    font-size: 1.3rem;
+    font-weight: bold;
+}
+
+.nav-links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--accent-deep);
+    font-weight: bold;
+}
+
+.card {
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.4rem;
+    margin-bottom: 1rem;
+}
+
+.eyebrow {
+    margin: 0 0 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.78rem;
+    color: var(--accent-deep);
+}
+
+h1,
+h2,
+h3,
+p {
+    margin-top: 0;
+}
+
+.intro,
+.muted {
+    color: var(--muted);
+}
+
+.layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    gap: 1rem;
+}
+
+.stack,
+.sidebar {
+    display: grid;
+    gap: 1rem;
+}
+
+.notice {
+    border-radius: 0.85rem;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.notice.success {
+    background: var(--success-bg);
+    border: 1px solid var(--success-border);
+}
+
+.notice.error {
+    background: var(--error-bg);
+    border: 1px solid var(--error-border);
+}
+
+.task-card {
+    overflow: hidden;
+}
+
+.task-card__tap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.1rem 1.2rem;
+    text-decoration: none;
+    background: linear-gradient(135deg, rgba(250, 239, 224, 0.95), rgba(245, 229, 205, 0.95));
+}
+
+.task-card__tap h2 {
+    margin-bottom: 0;
+}
+
+.task-card__domain {
+    margin-bottom: 0.35rem;
+    color: var(--muted);
+}
+
+.task-card__cta {
+    min-width: 4.5rem;
+    text-align: center;
+    padding: 0.55rem 0.85rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    font-weight: bold;
+}
+
+.task-card__body {
+    padding: 1rem 1.2rem 1.2rem;
+}
+
+.checklist-editor,
+.plain-list,
+.run-checklist,
+.summary-list,
+.history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.checklist-editor li,
+.history-list li,
+.summary-list li {
+    border-top: 1px solid rgba(210, 189, 164, 0.65);
+    padding: 0.8rem 0;
+}
+
+.checklist-editor li:first-child,
+.history-list li:first-child,
+.summary-list li:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.inline-edit,
+.stack-form,
+.run-form {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.input-row,
+.split-row {
+    display: flex;
+    gap: 0.65rem;
+    align-items: center;
+}
+
+input,
+select,
+button,
+textarea {
+    font: inherit;
+}
+
+input,
+select {
+    min-height: 2.8rem;
+    border: 1px solid var(--border);
+    border-radius: 0.8rem;
+    padding: 0.65rem 0.8rem;
+    background: #fffdf8;
+    color: var(--ink);
+}
+
+input[type="checkbox"] {
+    min-height: auto;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: 0.65rem;
+}
+
+label {
+    font-weight: bold;
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.9rem;
+    border: 0;
+    border-radius: 0.8rem;
+    padding: 0.65rem 1rem;
+    background: var(--accent);
+    color: #fff8f3;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.button:hover,
+.button:focus {
+    background: var(--accent-deep);
+}
+
+.button-secondary {
+    background: #f1e3d1;
+    color: var(--accent-deep);
+}
+
+.button-ghost {
+    background: transparent;
+    color: var(--accent-deep);
+    border: 1px solid var(--border);
+}
+
+.button-small {
+    min-height: 2.4rem;
+    padding: 0.45rem 0.8rem;
+}
+
+.button-wide {
+    width: 100%;
+}
+
+.sticky-composer {
+    padding: 1.1rem;
+    position: sticky;
+    top: 0.75rem;
+}
+
+.empty-state,
+.flow-card,
+.summary-card,
+.history-card {
+    padding: 1.1rem;
+}
+
+.flow-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.pill {
+    display: inline-flex;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    font-size: 0.88rem;
+}
+
+.run-checklist li {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid rgba(210, 189, 164, 0.65);
+    padding: 0.85rem 0;
+}
+
+.run-checklist li:first-child {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.history-list strong,
+.summary-list strong {
+    display: block;
+}
+
+.history-meta,
+.summary-meta {
+    color: var(--muted);
+    font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+    .layout-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hero,
+    .flow-header,
+    .site-header,
+    .site-footer,
+    .input-row,
+    .split-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sticky-composer {
+        position: static;
+    }
+}

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>{% block title %}Task Solver{% endblock %}</title>
+    <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+    <main class="shell">
+        <header class="site-header">
+            <a class="brand" href="/">
+                <span class="brand-mark">Household and beyond</span>
+                <span class="brand-name">Task Solver</span>
+            </a>
+
+            <nav class="nav-links" aria-label="Primary">
+                <a href="/">Board</a>
+                <a href="/reports">Reports</a>
+            </nav>
+        </header>
+
+        {% block content %}{% endblock %}
+
+        <footer class="site-footer">
+            <span>Designed for a wall-mounted, touch-first iPad workflow.</span>
+            <a href="#new-task">Add a task</a>
+        </footer>
+    </main>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
