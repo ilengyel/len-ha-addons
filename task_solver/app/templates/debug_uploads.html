@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Debug uploads{% endblock %}
+
+{% block content %}
+<section class="hero card">
+    <div>
+        <p class="eyebrow">Debug tools</p>
+        <h1>Upload screenshots</h1>
+        <p class="intro">Send tablet screenshots here during debugging. Files stay on this server and can be opened again from the gallery below.</p>
+    </div>
+</section>
+
+{% if message %}
+<section class="notice success">{{ message }}</section>
+{% endif %}
+
+{% if error %}
+<section class="notice error">{{ error }}</section>
+{% endif %}
+
+<section class="debug-layout">
+    <section class="card flow-card">
+        <div class="section-heading">
+            <h2>Upload image</h2>
+        </div>
+        <form class="stack-form" action="/debug/uploads" method="post" enctype="multipart/form-data">
+            <label for="debug-image">Image file</label>
+            <input id="debug-image" name="image" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" required>
+            <button class="button" type="submit">Upload</button>
+        </form>
+    </section>
+
+    <section class="card history-card">
+        <div class="section-heading">
+            <h2>Stored images</h2>
+        </div>
+        {% if images %}
+        <div class="debug-gallery">
+            {% for image in images %}
+            <article class="debug-gallery__item">
+                <a href="{{ image.url }}" target="_blank" rel="noreferrer">
+                    <img src="{{ image.url }}" alt="{{ image.name }}">
+                </a>
+                <div class="debug-gallery__meta">
+                    <strong>{{ image.name }}</strong>
+                    <span class="history-meta">{{ image.modified_at }} &middot; {{ image.size }}</span>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="muted">No screenshots uploaded yet.</p>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}
