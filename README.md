@@ -15,19 +15,6 @@ It provides:
 - Recent completion history and a reports screen.
 - Home Assistant add-on packaging with ingress support and direct access on port `8099`.
 
-## Repository layout
-
-```text
-repository.yaml
-task_solver/
-  config.yaml
-  Dockerfile
-  requirements.txt
-  app/
-  rootfs/
-  tests/
-```
-
 ## Local development
 
 Run tests from the repository root:
