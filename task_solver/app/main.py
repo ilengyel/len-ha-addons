@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 from typing import Optional
 
@@ -11,6 +12,26 @@ from app.models import Base
 from app.routers import debug, reports, runs, tasks
 from app.seed import seed_default_data
 from app.web import STATIC_DIR, build_debug_upload_dir
+
+logger = logging.getLogger("uvicorn.error")
+
+
+class IngressASGIMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            ingress_path = ""
+            for name, value in scope.get("headers", []):
+                if name == b"x-ingress-path":
+                    ingress_path = value.decode("utf-8").rstrip("/")
+                    break
+            if ingress_path:
+                scope = dict(scope)
+                scope["root_path"] = ingress_path
+
+        await self.app(scope, receive, send)
 
 
 def create_app(database_url: Optional[str] = None, seed_defaults: bool = True) -> FastAPI:
@@ -30,21 +51,23 @@ def create_app(database_url: Optional[str] = None, seed_defaults: bool = True) -
 
     app = FastAPI(title="Task Solver", lifespan=lifespan)
     app.state.debug_upload_dir = debug_upload_dir
+    app.add_middleware(IngressASGIMiddleware)
 
     @app.middleware("http")
     async def ingress_middleware(request: Request, call_next):
         ingress_path = request.headers.get("X-Ingress-Path")
-        if ingress_path:
-            ingress_path = ingress_path.rstrip("/")
-            request.scope["root_path"] = ingress_path
+        client_ip = request.client.host if request.client else "unknown"
+        mode_str = f"Ingress ({ingress_path})" if ingress_path else "Direct"
 
         response = await call_next(request)
 
         if ingress_path and "location" in response.headers:
+            ingress_path_clean = ingress_path.rstrip("/")
             location = response.headers["location"]
-            if location.startswith("/") and not location.startswith(ingress_path):
-                response.headers["location"] = f"{ingress_path}{location}"
+            if location.startswith("/") and not location.startswith(ingress_path_clean):
+                response.headers["location"] = f"{ingress_path_clean}{location}"
 
+        logger.info(f"[{mode_str}] {client_ip} - \"{request.method} {request.url.path}\" -> {response.status_code}")
         return response
 
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
