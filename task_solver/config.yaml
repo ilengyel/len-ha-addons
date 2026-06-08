@@ -5,9 +5,11 @@ description: Touch-first task tracker for household chores and repeatable checkl
 url: https://example.invalid/ha-addons/tree/main/task_solver
 startup: application
 boot: auto
+init: false
 panel_icon: mdi:clipboard-check-outline
 ingress: true
 ingress_port: 8099
+webui: http://[HOST]:[PORT:8099]/
 homeassistant_api: false
 map:
   - addon_config:rw
@@ -16,7 +18,7 @@ options:
 schema:
   log_level: list(trace|debug|info|notice|warning|error|fatal)
 ports:
-  8099/tcp: null
+  8099/tcp: 8099
 ports_description:
   8099/tcp: Task Solver direct access port
 arch:

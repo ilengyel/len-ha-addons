@@ -13,7 +13,7 @@ It provides:
 - A board view for creating, renaming, and removing tasks.
 - A completion flow that lets a person pick themselves and tick checklist items.
 - Recent completion history and a reports screen.
-- Home Assistant add-on packaging with ingress support and direct access on port `8099`.
+- Home Assistant add-on packaging with ingress support and direct access on port `8099` when enabled in the add-on config.
 
 ## Local development
 
