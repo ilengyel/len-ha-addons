@@ -22,14 +22,17 @@ class IngressASGIMiddleware:
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
-            ingress_path = ""
-            for name, value in scope.get("headers", []):
-                if name == b"x-ingress-path":
-                    ingress_path = value.decode("utf-8").rstrip("/")
-                    break
-            if ingress_path:
-                scope = dict(scope)
-                scope["root_path"] = ingress_path
+            path = scope.get("path", "")
+            # Do not set root_path for static file routes to avoid Starlette StaticFiles bugs
+            if not path.startswith("/static") and not path.startswith("/debug-media"):
+                ingress_path = ""
+                for name, value in scope.get("headers", []):
+                    if name == b"x-ingress-path":
+                        ingress_path = value.decode("utf-8").rstrip("/")
+                        break
+                if ingress_path:
+                    scope = dict(scope)
+                    scope["root_path"] = ingress_path
 
         await self.app(scope, receive, send)
 
