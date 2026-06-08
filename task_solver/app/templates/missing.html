@@ -5,6 +5,6 @@
 {% block content %}
 <section class="card empty-state">
     <h1>{{ message }}</h1>
-    <a class="button" href="/">Return to board</a>
+    <a class="button" href="{{ request.scope.get('root_path', '') or '/' }}">Return to board</a>
 </section>
 {% endblock %}

@@ -7,21 +7,21 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="theme-color" content="#7f3018">
     <title>{% block title %}Task Solver{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-    <link rel="stylesheet" href="/static/css/app.css">
+    <link rel="icon" type="image/svg+xml" href="{{ request.scope.get('root_path', '') }}/static/favicon.svg">
+    <link rel="stylesheet" href="{{ request.scope.get('root_path', '') }}/static/css/app.css">
 </head>
 <body>
     <main class="shell">
         <header class="site-header">
-            <a class="brand" href="/">
+            <a class="brand" href="{{ request.scope.get('root_path', '') or '/' }}">
                 <span class="brand-mark">Household and beyond</span>
                 <span class="brand-name">Task Solver</span>
             </a>
 
             <nav class="nav-links" aria-label="Primary">
-                <a href="/">Board</a>
-                <a href="/reports">Reports</a>
-                <a href="/debug/uploads">Debug uploads</a>
+                <a href="{{ request.scope.get('root_path', '') or '/' }}">Board</a>
+                <a href="{{ request.scope.get('root_path', '') }}/reports">Reports</a>
+                <a href="{{ request.scope.get('root_path', '') }}/debug/uploads">Debug uploads</a>
             </nav>
         </header>
 
@@ -31,6 +31,6 @@
             <span>Designed for a wall-mounted, touch-first iPad workflow.</span>
         </footer>
     </main>
-    <script src="/static/js/app.js"></script>
+    <script src="{{ request.scope.get('root_path', '') }}/static/js/app.js"></script>
 </body>
 </html>

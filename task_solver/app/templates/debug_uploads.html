@@ -24,7 +24,7 @@
         <div class="section-heading">
             <h2>Upload image</h2>
         </div>
-        <form class="stack-form" action="/debug/uploads" method="post" enctype="multipart/form-data">
+        <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/debug/uploads" method="post" enctype="multipart/form-data">
             <label for="debug-image">Image file</label>
             <input id="debug-image" name="image" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/bmp" required>
             <button class="button" type="submit">Upload</button>

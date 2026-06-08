@@ -18,7 +18,7 @@
     {% endif %}
 
     <div class="run-form">
-        <form id="completion-form" method="post" action="/tasks/{{ task.id }}/complete"></form>
+        <form id="completion-form" method="post" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/complete"></form>
 
         {# ── Who section ───────────────────────────────────────────── #}
         <section
@@ -45,7 +45,7 @@
                         <span class="sr-only">Add person</span>
                     </summary>
                     <div class="editor-panel">
-                        <form class="stack-form" method="post" action="/users">
+                        <form class="stack-form" method="post" action="{{ request.scope.get('root_path', '') }}/users">
                             <input type="hidden" name="return_to" value="/tasks/{{ task.id }}/complete">
                             <label for="new-person-name">New person</label>
                             <div class="input-row">
@@ -84,7 +84,7 @@
                                     <span class="sr-only">Edit {{ user.name }}</span>
                                 </summary>
                                 <div class="editor-panel">
-                                    <form class="stack-form" action="/users/{{ user.id }}/edit" method="post">
+                                    <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/users/{{ user.id }}/edit" method="post">
                                         <input type="hidden" name="return_to" value="/tasks/{{ task.id }}/complete">
                                         <label for="person-{{ user.id }}-name">Edit name</label>
                                         <div class="input-row">
@@ -116,7 +116,7 @@
                         <span class="sr-only">Add checklist item</span>
                     </summary>
                     <div class="editor-panel">
-                        <form class="stack-form" method="post" action="/tasks/{{ task.id }}/checklist">
+                        <form class="stack-form" method="post" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist">
                             <input type="hidden" name="return_to" value="/tasks/{{ task.id }}/complete#checklist">
                             <label for="checklist-new-item">Add checklist item</label>
                             <div class="input-row">
@@ -158,7 +158,7 @@
                                 <span class="sr-only">Edit {{ item.title }}</span>
                             </summary>
                             <div class="editor-panel">
-                                <form class="stack-form" action="/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
+                                <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
                                     <input type="hidden" name="return_to" value="/tasks/{{ task.id }}/complete#checklist-item-{{ item.id }}">
                                     <label for="item-{{ item.id }}-title">Edit checklist item</label>
                                     <div class="input-row">
@@ -173,7 +173,7 @@
                                         <button class="button button-small" type="submit">Save</button>
                                     </div>
                                 </form>
-                                <form action="/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
+                                <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
                                     <input type="hidden" name="return_to" value="/tasks/{{ task.id }}/complete#checklist">
                                     <button class="button button-ghost button-small" type="submit">Remove</button>
                                 </form>
@@ -190,7 +190,7 @@
 
         <div class="split-row">
             <button class="button button-wide" type="submit" form="completion-form">Mark task as done</button>
-            <a class="button button-secondary button-wide" href="/">Back to board</a>
+            <a class="button button-secondary button-wide" href="{{ request.scope.get('root_path', '') or '/' }}">Back to board</a>
         </div>
     </div>
 </section>

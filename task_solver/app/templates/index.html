@@ -17,7 +17,7 @@
             <span class="sr-only">Add task</span>
         </summary>
         <div class="editor-panel">
-            <form class="stack-form" action="/tasks" method="post">
+            <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks" method="post">
                 <label for="task-title">Task title</label>
                 <div class="input-row">
                     <input id="task-title" name="title" type="text" maxlength="200" placeholder="Example: Clean the pool" required>
@@ -42,7 +42,7 @@
             {% for task in tasks %}
             <article class="task-card card" id="task-{{ task.id }}">
                 <div class="task-card__summary task-card__summary--board">
-                    <a class="task-card__launch" href="/tasks/{{ task.id }}/complete">
+                    <a class="task-card__launch" href="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/complete">
                         <div class="task-card__heading">
                             <h2>{{ task.title }}</h2>
                             <p class="task-card__meta">{{ task.domain }}</p>
@@ -57,7 +57,7 @@
                             <span class="sr-only">Edit {{ task.title }}</span>
                         </summary>
                         <div class="editor-panel">
-                            <form class="stack-form" action="/tasks/{{ task.id }}/edit" method="post">
+                            <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/edit" method="post">
                                 <input type="hidden" name="return_to" value="/?renamed=1#task-{{ task.id }}">
                                 <label for="task-{{ task.id }}-title">Rename task</label>
                                 <div class="input-row">
@@ -65,7 +65,7 @@
                                     <button class="button button-small" type="submit">Save</button>
                                 </div>
                             </form>
-                            <form action="/tasks/{{ task.id }}/delete" method="post">
+                            <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/delete" method="post">
                                 <input type="hidden" name="return_to" value="/?deleted=1">
                                 <button class="button button-ghost button-small" type="submit">Remove</button>
                             </form>
