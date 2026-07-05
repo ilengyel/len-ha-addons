@@ -32,63 +32,107 @@
         setExpanded(section, true);
     }
 
-    sections.forEach(function (section) {
+    for (var i = 0; i < sections.length; i += 1) {
+        var section = sections[i];
         var toggle = section.querySelector('[data-collapsible-toggle]');
         var body = section.querySelector('[data-collapsible-body]');
 
         if (!toggle || !body) {
-            return;
+            continue;
         }
 
         setExpanded(section, toggle.getAttribute('aria-expanded') === 'true' && !body.hidden);
-        toggle.addEventListener('click', function () {
-            setExpanded(section, toggle.getAttribute('aria-expanded') !== 'true');
-        });
-    });
+        (function (currentSection, currentToggle) {
+            currentToggle.addEventListener('click', function () {
+                setExpanded(currentSection, currentToggle.getAttribute('aria-expanded') !== 'true');
+            });
+        }(section, toggle));
+    }
 
     openSectionFromHash();
     window.addEventListener('hashchange', openSectionFromHash);
 }());
 
 (function () {
-    var whoSection = document.querySelector('[data-who-section]');
-    if (!whoSection) { return; }
+    var panels = document.querySelectorAll('[data-completion-panel]');
 
-    var whoList = whoSection.querySelector('[data-who-list]');
-    var whoToggle = whoSection.querySelector('[data-who-toggle]');
-    var whoTitle = whoSection.querySelector('[data-who-title]');
-    var radios = whoSection.querySelectorAll('[data-who-radio]');
+    if (!panels.length) {
+        return;
+    }
 
-    if (!whoList || !whoToggle) { return; }
+    function setPanelOpen(panel, open) {
+        panel.hidden = !open;
+        if (panel.parentNode) {
+            panel.parentNode.classList.toggle('is-open', open);
+        }
+    }
 
-    function collapseWho(name) {
+    function openPanelFromHash() {
+        if (!window.location.hash) {
+            return;
+        }
+
+        var targetId = window.location.hash.slice(1);
+        var isCompletionHash = targetId.indexOf('complete-task-') === 0;
+
+        for (var i = 0; i < panels.length; i += 1) {
+            setPanelOpen(panels[i], isCompletionHash && panels[i].id === targetId);
+        }
+    }
+
+    openPanelFromHash();
+    window.addEventListener('hashchange', openPanelFromHash);
+}());
+
+(function () {
+    var whoSections = document.querySelectorAll('[data-who-section]');
+    if (!whoSections.length) { return; }
+
+    function collapseWho(whoList, whoToggle, whoTitle, name) {
         whoList.hidden = true;
         whoToggle.setAttribute('aria-expanded', 'false');
         if (whoTitle) { whoTitle.textContent = 'Who \u2014 ' + name; }
     }
 
-    function expandWho() {
+    function expandWho(whoList, whoToggle, whoTitle) {
         whoList.hidden = false;
         whoToggle.setAttribute('aria-expanded', 'true');
         if (whoTitle) { whoTitle.textContent = 'Who'; }
     }
 
-    radios.forEach(function (radio) {
-        radio.addEventListener('change', function () {
-            if (radio.checked) {
-                collapseWho(radio.getAttribute('data-who-name'));
-            }
-        });
-    });
+    for (var sectionIndex = 0; sectionIndex < whoSections.length; sectionIndex += 1) {
+        var whoSection = whoSections[sectionIndex];
+        var whoList = whoSection.querySelector('[data-who-list]');
+        var whoToggle = whoSection.querySelector('[data-who-toggle]');
+        var whoTitle = whoSection.querySelector('[data-who-title]');
+        var radios = whoSection.querySelectorAll('[data-who-radio]');
 
-    whoToggle.addEventListener('click', function () {
-        if (whoList.hidden) {
-            expandWho();
-        } else {
-            var checked = whoSection.querySelector('[data-who-radio]:checked');
-            if (checked) { collapseWho(checked.getAttribute('data-who-name')); }
+        if (!whoList || !whoToggle) { continue; }
+
+        for (var radioIndex = 0; radioIndex < radios.length; radioIndex += 1) {
+            var radio = radios[radioIndex];
+            (function (currentList, currentToggle, currentTitle, currentRadio) {
+                currentRadio.addEventListener('change', function () {
+                    if (currentRadio.checked) {
+                        collapseWho(currentList, currentToggle, currentTitle, currentRadio.getAttribute('data-who-name'));
+                    }
+                });
+            }(whoList, whoToggle, whoTitle, radio));
         }
-    });
+
+        (function (currentSection, currentList, currentToggle, currentTitle) {
+            currentToggle.addEventListener('click', function () {
+                if (currentList.hidden) {
+                    expandWho(currentList, currentToggle, currentTitle);
+                } else {
+                    var checked = currentSection.querySelector('[data-who-radio]:checked');
+                    if (checked) {
+                        collapseWho(currentList, currentToggle, currentTitle, checked.getAttribute('data-who-name'));
+                    }
+                }
+            });
+        }(whoSection, whoList, whoToggle, whoTitle));
+    }
 }());
 
 (function () {
@@ -99,26 +143,29 @@
     }
 
     function closeAllExcept(activePopup) {
-        popups.forEach(function (popup) {
+        for (var i = 0; i < popups.length; i += 1) {
+            var popup = popups[i];
             if (popup !== activePopup) {
                 popup.removeAttribute('open');
+            }
+        }
+    }
+
+    for (var i = 0; i < popups.length; i += 1) {
+        var popup = popups[i];
+        popup.addEventListener('toggle', function () {
+            if (this.open) {
+                closeAllExcept(this);
             }
         });
     }
 
-    popups.forEach(function (popup) {
-        popup.addEventListener('toggle', function () {
-            if (popup.open) {
-                closeAllExcept(popup);
-            }
-        });
-    });
-
     document.addEventListener('click', function (event) {
-        popups.forEach(function (popup) {
+        for (var i = 0; i < popups.length; i += 1) {
+            var popup = popups[i];
             if (popup.open && !popup.contains(event.target)) {
                 popup.removeAttribute('open');
             }
-        });
+        }
     });
 }());

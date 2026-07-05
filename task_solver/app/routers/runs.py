@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Set
 
 from fastapi import APIRouter, Depends, Form, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import session_dependency
 from app.models import Task, TaskRun, TaskRunItem, User
+from app.routers.tasks import render_index
 from app.utils import resolve_return_to
 from app.web import templates
 
@@ -117,7 +118,7 @@ def start_task_flow(
     task_id: int,
     request: Request,
     session: Session = Depends(session_dependency),
-) -> HTMLResponse:
+) -> Response:
     task = load_task(session, task_id)
     if task is None:
         return templates.TemplateResponse(
@@ -127,7 +128,10 @@ def start_task_flow(
             status_code=status.HTTP_404_NOT_FOUND,
         )
 
-    return render_completion_page(request, task, load_users(session))
+    return RedirectResponse(
+        url=f"/#complete-task-{task.id}",
+        status_code=status.HTTP_303_SEE_OTHER,
+    )
 
 
 @router.post("/tasks/{task_id}/complete", response_class=HTMLResponse)
@@ -151,14 +155,12 @@ def complete_task(
     selected_user_id = int(existing_user_id) if existing_user_id.strip().isdigit() else None
     checked_item_ids = set(completed_item_ids or [])
     all_item_ids = {item.id for item in task.checklist_items}
-    users = load_users(session)
-
     if not task.checklist_items:
-        return render_completion_page(
+        return render_index(
             request,
-            task,
-            users,
-            error="Add at least one checklist item on the main board before completing this task.",
+            session,
+            completion_error="Add at least one checklist item on the main board before completing this task.",
+            active_task_id=task.id,
             selected_user_id=selected_user_id,
             new_user_name=new_user_name,
             checked_item_ids=checked_item_ids,
@@ -168,11 +170,11 @@ def complete_task(
     user = resolve_user(session, selected_user_id, new_user_name)
     if user is None:
         session.rollback()
-        return render_completion_page(
+        return render_index(
             request,
-            task,
-            users,
-            error="Select a person or type a new name before marking the task complete.",
+            session,
+            completion_error="Select a person before marking the task complete.",
+            active_task_id=task.id,
             selected_user_id=selected_user_id,
             new_user_name=new_user_name,
             checked_item_ids=checked_item_ids,
@@ -181,11 +183,11 @@ def complete_task(
 
     if checked_item_ids != all_item_ids:
         session.rollback()
-        return render_completion_page(
+        return render_index(
             request,
-            task,
-            users,
-            error="Tick every checklist item before marking the task complete.",
+            session,
+            completion_error="Tick every checklist item before marking the task complete.",
+            active_task_id=task.id,
             selected_user_id=user.id,
             new_user_name=new_user_name,
             checked_item_ids=checked_item_ids,
@@ -212,4 +214,4 @@ def complete_task(
         )
 
     session.commit()
-    return RedirectResponse(url="/?completed=1", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url=f"/?completed=1#task-{task.id}", status_code=status.HTTP_303_SEE_OTHER)

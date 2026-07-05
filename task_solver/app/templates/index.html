@@ -40,13 +40,18 @@
     <div class="board-stack">
         {% if tasks %}
             {% for task in tasks %}
+            {% set task_is_active = active_task_id == task.id %}
+            {% set task_selected_user_id = selected_user_id if task_is_active else none %}
+            {% set task_checked_item_ids = checked_item_ids if task_is_active else [] %}
+            {% set selected_user = users | selectattr('id', 'equalto', task_selected_user_id) | first | default(none) %}
             <article class="task-card card" id="task-{{ task.id }}">
                 <div class="task-card__summary task-card__summary--board">
-                    <a class="task-card__launch" href="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/complete">
+                    <a class="task-card__launch" href="#complete-task-{{ task.id }}" data-completion-link>
                         <div class="task-card__heading">
                             <h2>{{ task.title }}</h2>
                             <p class="task-card__meta">{{ task.domain }}</p>
                         </div>
+                        <span class="task-card__chevron" aria-hidden="true"></span>
                     </a>
                     <details class="editor-menu">
                         <summary class="icon-button" aria-label="Edit {{ task.title }}">
@@ -72,6 +77,199 @@
                         </div>
                     </details>
                 </div>
+                <section
+                    id="complete-task-{{ task.id }}"
+                    class="task-card__body completion-panel"
+                    data-completion-panel
+                    {% if not task_is_active %}hidden{% endif %}
+                >
+                    <div class="flow-header">
+                        <div>
+                            <p class="eyebrow">Completion flow</p>
+                            <h2>{{ task.title }}</h2>
+                        </div>
+                        <span class="pill">{{ task.domain }}</span>
+                    </div>
+
+                    {% if task_is_active and completion_error %}
+                    <section class="notice error">{{ completion_error }}</section>
+                    {% endif %}
+
+                    <div class="run-form">
+                        <form id="completion-form-{{ task.id }}" method="post" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/complete"></form>
+
+                        <section
+                            id="who-{{ task.id }}"
+                            class="who-section"
+                            data-who-section
+                            {% if selected_user %}data-who-selected{% endif %}
+                        >
+                            <div class="section-heading who-section__heading">
+                                <button
+                                    type="button"
+                                    class="who-section__toggle"
+                                    data-who-toggle
+                                    aria-expanded="{% if selected_user %}false{% else %}true{% endif %}"
+                                >
+                                    <h3 class="who-section__title" data-who-title>
+                                        {% if selected_user %}Who — {{ selected_user.name }}{% else %}Who{% endif %}
+                                    </h3>
+                                    <span class="task-card__chevron" aria-hidden="true"></span>
+                                </button>
+                                <details class="editor-menu">
+                                    <summary class="icon-button" aria-label="Add person">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+                                        <span class="sr-only">Add person</span>
+                                    </summary>
+                                    <div class="editor-panel">
+                                        <form class="stack-form" method="post" action="{{ request.scope.get('root_path', '') }}/users">
+                                            <input type="hidden" name="return_to" value="/#complete-task-{{ task.id }}">
+                                            <label for="new-person-name-{{ task.id }}">New person</label>
+                                            <div class="input-row">
+                                                <input id="new-person-name-{{ task.id }}" name="name" type="text" maxlength="120" placeholder="Example: Alex" required>
+                                                <button class="button button-small" type="submit">Add</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </details>
+                            </div>
+
+                            <div class="who-section__list" data-who-list {% if selected_user %}hidden{% endif %}>
+                                {% if users %}
+                                <ul class="run-checklist">
+                                    {% for user in users %}
+                                    <li id="person-{{ task.id }}-{{ user.id }}">
+                                        <div class="run-checklist__row">
+                                            <label class="run-checklist__label">
+                                                <input
+                                                    type="radio"
+                                                    name="existing_user_id"
+                                                    value="{{ user.id }}"
+                                                    form="completion-form-{{ task.id }}"
+                                                    data-who-radio
+                                                    data-who-name="{{ user.name }}"
+                                                    {% if task_selected_user_id == user.id %}checked{% endif %}
+                                                >
+                                                {{ user.name }}
+                                            </label>
+                                            <details class="editor-menu">
+                                                <summary class="icon-button" aria-label="Edit {{ user.name }}">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <path d="M4 20h4l10-10-4-4L4 16v4z"></path>
+                                                        <path d="M12 6l4 4"></path>
+                                                    </svg>
+                                                    <span class="sr-only">Edit {{ user.name }}</span>
+                                                </summary>
+                                                <div class="editor-panel">
+                                                    <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/users/{{ user.id }}/edit" method="post">
+                                                        <input type="hidden" name="return_to" value="/#complete-task-{{ task.id }}">
+                                                        <label for="person-{{ task.id }}-{{ user.id }}-name">Edit name</label>
+                                                        <div class="input-row">
+                                                            <input id="person-{{ task.id }}-{{ user.id }}-name" name="name" type="text" value="{{ user.name }}" maxlength="120" required>
+                                                            <button class="button button-small" type="submit">Save</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </details>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                <p class="muted">No people yet — use + to add the first person.</p>
+                                {% endif %}
+                            </div>
+                        </section>
+
+                        <section id="checklist-{{ task.id }}">
+                            <div class="section-heading">
+                                <h3>Checklist</h3>
+                                <details class="editor-menu">
+                                    <summary class="icon-button" aria-label="Add checklist item">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 5v14M5 12h14"></path>
+                                        </svg>
+                                        <span class="sr-only">Add checklist item</span>
+                                    </summary>
+                                    <div class="editor-panel">
+                                        <form class="stack-form" method="post" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist">
+                                            <input type="hidden" name="return_to" value="/?updated=1#complete-task-{{ task.id }}">
+                                            <label for="checklist-new-item-{{ task.id }}">Add checklist item</label>
+                                            <div class="input-row">
+                                                <input
+                                                    id="checklist-new-item-{{ task.id }}"
+                                                    name="title"
+                                                    type="text"
+                                                    maxlength="200"
+                                                    placeholder="Example: Put away clean plates"
+                                                    required
+                                                >
+                                                <button class="button button-small" type="submit">Add</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </details>
+                            </div>
+                            {% if task.checklist_items %}
+                            <ul class="run-checklist">
+                                {% for item in task.checklist_items %}
+                                <li id="checklist-item-{{ item.id }}">
+                                    <div class="run-checklist__row">
+                                        <label class="run-checklist__label">
+                                            <input
+                                                type="checkbox"
+                                                name="completed_item_ids"
+                                                value="{{ item.id }}"
+                                                form="completion-form-{{ task.id }}"
+                                                {% if item.id in task_checked_item_ids %}checked{% endif %}
+                                            >
+                                            {{ item.title }}
+                                        </label>
+                                        <details class="editor-menu">
+                                            <summary class="icon-button" aria-label="Edit {{ item.title }}">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M4 20h4l10-10-4-4L4 16v4z"></path>
+                                                    <path d="M12 6l4 4"></path>
+                                                </svg>
+                                                <span class="sr-only">Edit {{ item.title }}</span>
+                                            </summary>
+                                            <div class="editor-panel">
+                                                <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
+                                                    <input type="hidden" name="return_to" value="/?updated=1#complete-task-{{ task.id }}">
+                                                    <label for="item-{{ item.id }}-title">Edit checklist item</label>
+                                                    <div class="input-row">
+                                                        <input
+                                                            id="item-{{ item.id }}-title"
+                                                            name="title"
+                                                            type="text"
+                                                            value="{{ item.title }}"
+                                                            maxlength="200"
+                                                            required
+                                                        >
+                                                        <button class="button button-small" type="submit">Save</button>
+                                                    </div>
+                                                </form>
+                                                <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
+                                                    <input type="hidden" name="return_to" value="/?updated=1#complete-task-{{ task.id }}">
+                                                    <button class="button button-ghost button-small" type="submit">Remove</button>
+                                                </form>
+                                            </div>
+                                        </details>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="muted">This task cannot be completed yet because it has no checklist items.</p>
+                            {% endif %}
+                        </section>
+
+                        <div class="split-row">
+                            <button class="button button-wide" type="submit" form="completion-form-{{ task.id }}">Mark task as done</button>
+                            <a class="button button-secondary button-wide" href="#task-{{ task.id }}">Back to board</a>
+                        </div>
+                    </div>
+                </section>
             </article>
             {% endfor %}
         {% else %}
