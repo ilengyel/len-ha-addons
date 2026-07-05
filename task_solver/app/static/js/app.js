@@ -1,4 +1,30 @@
 (function () {
+    var timestamps = document.querySelectorAll('[data-local-datetime]');
+
+    function pad(value) {
+        return String(value).padStart(2, '0');
+    }
+
+    function formatLocalDateTime(date) {
+        return [
+            date.getFullYear(),
+            pad(date.getMonth() + 1),
+            pad(date.getDate())
+        ].join('-') + ' ' + [pad(date.getHours()), pad(date.getMinutes())].join(':');
+    }
+
+    for (var i = 0; i < timestamps.length; i += 1) {
+        var timestamp = timestamps[i];
+        var date = new Date(timestamp.getAttribute('datetime'));
+
+        if (!Number.isNaN(date.getTime())) {
+            timestamp.textContent = formatLocalDateTime(date);
+            timestamp.title = 'UTC: ' + timestamp.getAttribute('datetime');
+        }
+    }
+}());
+
+(function () {
     var sections = document.querySelectorAll('[data-collapsible]');
 
     if (!sections.length) {
@@ -15,7 +41,11 @@
 
         toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
         body.hidden = !expanded;
-        section.classList.toggle('is-open', expanded);
+        if (expanded) {
+            section.classList.add('is-open');
+        } else {
+            section.classList.remove('is-open');
+        }
     }
 
     function openSectionFromHash() {
@@ -55,15 +85,55 @@
 
 (function () {
     var panels = document.querySelectorAll('[data-completion-panel]');
+    var buttons = document.querySelectorAll('[data-completion-button]');
 
     if (!panels.length) {
         return;
     }
 
     function setPanelOpen(panel, open) {
-        panel.hidden = !open;
+        panel.style.display = open ? '' : 'none';
+        panel.setAttribute('aria-hidden', open ? 'false' : 'true');
         if (panel.parentNode) {
-            panel.parentNode.classList.toggle('is-open', open);
+            if (open) {
+                panel.parentNode.classList.add('is-open');
+            } else {
+                panel.parentNode.classList.remove('is-open');
+            }
+        }
+    }
+
+    function scrollToTop() {
+        window.scrollTo(0, 0);
+    }
+
+    function scrollPanelCardIntoView(panel) {
+        var card = panel.closest ? panel.closest('.task-card') : panel.parentNode;
+        var target = card || panel;
+
+        if (target.scrollIntoView) {
+            target.scrollIntoView();
+        }
+    }
+
+    function openPanelById(targetId) {
+        var targetPanel = document.getElementById(targetId);
+        var shouldOpen;
+
+        if (!targetPanel || !targetPanel.hasAttribute('data-completion-panel')) {
+            return;
+        }
+
+        shouldOpen = targetPanel.style.display === 'none' || targetPanel.getAttribute('aria-hidden') === 'true';
+
+        for (var i = 0; i < panels.length; i += 1) {
+            setPanelOpen(panels[i], shouldOpen && panels[i] === targetPanel);
+        }
+
+        if (shouldOpen) {
+            scrollPanelCardIntoView(targetPanel);
+        } else {
+            scrollToTop();
         }
     }
 
@@ -77,7 +147,17 @@
 
         for (var i = 0; i < panels.length; i += 1) {
             setPanelOpen(panels[i], isCompletionHash && panels[i].id === targetId);
+            if (isCompletionHash && panels[i].id === targetId) {
+                scrollPanelCardIntoView(panels[i]);
+            }
         }
+    }
+
+    for (var buttonIndex = 0; buttonIndex < buttons.length; buttonIndex += 1) {
+        var button = buttons[buttonIndex];
+        button.addEventListener('click', function () {
+            openPanelById(this.getAttribute('data-completion-target'));
+        });
     }
 
     openPanelFromHash();
@@ -151,11 +231,27 @@
         }
     }
 
+    function focusFirstEditorField(popup) {
+        var field = popup.querySelector('.editor-panel input:not([type="hidden"]), .editor-panel textarea, .editor-panel select');
+
+        if (!field) {
+            return;
+        }
+
+        window.setTimeout(function () {
+            field.focus();
+            if (field.select) {
+                field.select();
+            }
+        }, 0);
+    }
+
     for (var i = 0; i < popups.length; i += 1) {
         var popup = popups[i];
         popup.addEventListener('toggle', function () {
             if (this.open) {
                 closeAllExcept(this);
+                focusFirstEditorField(this);
             }
         });
     }

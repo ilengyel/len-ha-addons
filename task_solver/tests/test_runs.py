@@ -29,12 +29,17 @@ def test_complete_task_creates_user_and_run(client) -> None:
             "existing_user_id": str(morgan_id),
             "completed_item_ids": [str(item_ids[0]), str(item_ids[1])],
         },
-        follow_redirects=True,
+        follow_redirects=False,
     )
 
+    assert response.status_code == 303
+    assert response.headers["location"] == "/?completed=1"
+
+    response = client.get(response.headers["location"])
     assert response.status_code == 200
     assert "Completion recorded." in response.text
     assert "Recently completed" in response.text
+    assert "data-local-datetime" in response.text
     assert "Completion history and simple summaries" not in response.text
 
     with client.app.state.session_factory() as session:

@@ -129,6 +129,10 @@ p {
     gap: 0.85rem;
 }
 
+.board-stack {
+    align-content: start;
+}
+
 .board-layout {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
@@ -162,7 +166,7 @@ p {
 }
 
 .task-card {
-    overflow: hidden;
+    overflow: visible;
 }
 
 .task-card__summary {
@@ -171,7 +175,12 @@ p {
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.9rem 1rem;
+    border-radius: calc(1rem - 1px) calc(1rem - 1px) 0 0;
     background: linear-gradient(135deg, rgba(250, 239, 224, 0.95), rgba(245, 229, 205, 0.95));
+}
+
+.task-card:not(.is-open) .task-card__summary {
+    border-radius: calc(1rem - 1px);
 }
 
 .task-card__summary--board {
@@ -214,7 +223,14 @@ p {
     flex: 1 1 auto;
     min-width: 0;
     min-height: 3rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     text-decoration: none;
+    cursor: pointer;
 }
 
 .task-card__meta {
@@ -257,6 +273,7 @@ p {
 .task-card__body {
     padding: 0.95rem 1rem 1rem;
     border-top: 1px solid rgba(210, 189, 164, 0.65);
+    border-radius: 0 0 calc(1rem - 1px) calc(1rem - 1px);
 }
 
 .completion-panel {
@@ -579,13 +596,27 @@ label {
     z-index: 1;
     display: grid;
     gap: 0.65rem;
-    min-width: min(22rem, calc(100vw - 4rem));
+    width: 18rem;
+    max-width: calc(100vw - 3rem);
     margin-top: 0.4rem;
     padding: 0.85rem;
     border: 1px solid var(--border);
     border-radius: 0.85rem;
     background: var(--paper-strong);
     box-shadow: var(--shadow);
+}
+
+.editor-panel .input-row {
+    flex-wrap: nowrap;
+}
+
+.editor-panel .input-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.editor-panel .input-row .button {
+    flex: 0 0 auto;
 }
 
 .sr-only {
@@ -606,7 +637,7 @@ label {
     font-size: 0.95rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
     .board-layout {
         grid-template-columns: 1fr;
     }
@@ -616,10 +647,19 @@ label {
     .flow-header,
     .site-header,
     .site-footer,
-    .input-row,
     .split-row {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .input-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .editor-panel .input-row {
+        flex-direction: row;
+        align-items: center;
     }
 
     .task-card__start,
@@ -638,7 +678,8 @@ label {
     }
 
     .editor-panel {
-        position: static;
-        min-width: 0;
+        position: absolute;
+        width: 18rem;
+        max-width: calc(100vw - 3rem);
     }
 }

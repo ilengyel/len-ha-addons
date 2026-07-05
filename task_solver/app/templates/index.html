@@ -46,13 +46,18 @@
             {% set selected_user = users | selectattr('id', 'equalto', task_selected_user_id) | first | default(none) %}
             <article class="task-card card" id="task-{{ task.id }}">
                 <div class="task-card__summary task-card__summary--board">
-                    <a class="task-card__launch" href="#complete-task-{{ task.id }}" data-completion-link>
+                    <button
+                        type="button"
+                        class="task-card__launch"
+                        data-completion-button
+                        data-completion-target="complete-task-{{ task.id }}"
+                    >
                         <div class="task-card__heading">
                             <h2>{{ task.title }}</h2>
                             <p class="task-card__meta">{{ task.domain }}</p>
                         </div>
                         <span class="task-card__chevron" aria-hidden="true"></span>
-                    </a>
+                    </button>
                     <details class="editor-menu">
                         <summary class="icon-button" aria-label="Edit {{ task.title }}">
                             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -81,16 +86,9 @@
                     id="complete-task-{{ task.id }}"
                     class="task-card__body completion-panel"
                     data-completion-panel
-                    {% if not task_is_active %}hidden{% endif %}
+                    aria-hidden="{% if task_is_active %}false{% else %}true{% endif %}"
+                    style="{% if not task_is_active %}display: none;{% endif %}"
                 >
-                    <div class="flow-header">
-                        <div>
-                            <p class="eyebrow">Completion flow</p>
-                            <h2>{{ task.title }}</h2>
-                        </div>
-                        <span class="pill">{{ task.domain }}</span>
-                    </div>
-
                     {% if task_is_active and completion_error %}
                     <section class="notice error">{{ completion_error }}</section>
                     {% endif %}
@@ -263,10 +261,8 @@
                             <p class="muted">This task cannot be completed yet because it has no checklist items.</p>
                             {% endif %}
                         </section>
-
                         <div class="split-row">
                             <button class="button button-wide" type="submit" form="completion-form-{{ task.id }}">Mark task as done</button>
-                            <a class="button button-secondary button-wide" href="#task-{{ task.id }}">Back to board</a>
                         </div>
                     </div>
                 </section>
@@ -288,7 +284,10 @@
                 {% for run in recent_runs %}
                 <li>
                     <strong>{{ run.task_title_snapshot }}</strong>
-                    <span class="history-meta">{{ run.user_name_snapshot }} at {{ run.completed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <span class="history-meta">
+                        {{ run.user_name_snapshot }} at
+                        <time datetime="{{ run.completed_at | utc_iso }}" data-local-datetime>{{ run.completed_at.strftime('%Y-%m-%d %H:%M') }}</time>
+                    </span>
                 </li>
                 {% endfor %}
             </ul>

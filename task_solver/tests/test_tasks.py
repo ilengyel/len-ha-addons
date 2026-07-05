@@ -21,7 +21,8 @@ def test_create_task_and_manage_checklist(client) -> None:
 
     assert f'id="task-{task_id}"' in create_response.text
     assert 'id="add-task"' in create_response.text
-    assert f'href="#complete-task-{task_id}"' in create_response.text
+    assert "data-completion-button" in create_response.text
+    assert f'data-completion-target="complete-task-{task_id}"' in create_response.text
     assert f'action="/tasks/{task_id}/edit"' in create_response.text
     assert f'action="/tasks/{task_id}/delete"' in create_response.text
     assert f'action="/tasks/{task_id}/checklist"' in create_response.text

@@ -214,4 +214,4 @@ def complete_task(
         )
 
     session.commit()
-    return RedirectResponse(url=f"/?completed=1#task-{task.id}", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/?completed=1", status_code=status.HTTP_303_SEE_OTHER)
