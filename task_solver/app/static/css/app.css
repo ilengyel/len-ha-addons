@@ -561,15 +561,21 @@ label {
     list-style: none;
 }
 
+.editor-menu summary::marker {
+    content: "";
+}
+
 .editor-menu summary::-webkit-details-marker {
     display: none;
 }
 
 .icon-button {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 2.5rem;
+    height: 2.5rem;
     min-width: 2.5rem;
     min-height: 2.5rem;
     padding: 0;
@@ -581,6 +587,9 @@ label {
 }
 
 .icon-button svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 1rem;
     height: 1rem;
     fill: none;
@@ -588,6 +597,7 @@ label {
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 2;
+    transform: translate(-50%, -50%);
 }
 
 .editor-panel {
