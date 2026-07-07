@@ -29,12 +29,17 @@ def test_complete_task_creates_user_and_run(client) -> None:
             "existing_user_id": str(morgan_id),
             "completed_item_ids": [str(item_ids[0]), str(item_ids[1])],
         },
-        follow_redirects=True,
+        follow_redirects=False,
     )
 
+    assert response.status_code == 303
+    assert response.headers["location"] == "/?completed=1"
+
+    response = client.get(response.headers["location"])
     assert response.status_code == 200
     assert "Completion recorded." in response.text
     assert "Recently completed" in response.text
+    assert "data-local-datetime" in response.text
     assert "Completion history and simple summaries" not in response.text
 
     with client.app.state.session_factory() as session:
@@ -47,7 +52,20 @@ def test_complete_task_creates_user_and_run(client) -> None:
         assert len(task_run.items) == 2
 
 
-def test_complete_task_page_contains_checklist_editor(client) -> None:
+def test_complete_task_url_redirects_to_inline_panel(client) -> None:
+    with client.app.state.session_factory() as session:
+        task = Task(title="Kitchen reset", domain="Household")
+        session.add(task)
+        session.commit()
+        task_id = task.id
+
+    response = client.get(f"/tasks/{task_id}/complete", follow_redirects=False)
+
+    assert response.status_code == 303
+    assert response.headers["location"] == f"/#complete-task-{task_id}"
+
+
+def test_board_contains_inline_checklist_editor(client) -> None:
     with client.app.state.session_factory() as session:
         task = Task(title="Kitchen reset", domain="Household")
         session.add(task)
@@ -60,7 +78,7 @@ def test_complete_task_page_contains_checklist_editor(client) -> None:
         item_id = item.id
         user_id = user.id
 
-    response = client.get(f"/tasks/{task_id}/complete")
+    response = client.get("/")
 
     assert response.status_code == 200
     # who section: radio list + add/edit
@@ -69,6 +87,7 @@ def test_complete_task_page_contains_checklist_editor(client) -> None:
     assert f'action="/users/{user_id}/edit"' in response.text
     assert 'action="/users"' in response.text
     # checklist editing
+    assert f'id="complete-task-{task_id}"' in response.text
     assert f'action="/tasks/{task_id}/checklist"' in response.text
     assert f'action="/tasks/{task_id}/checklist/{item_id}/edit"' in response.text
     # no instruction prose

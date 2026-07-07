@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from app.models import ChecklistItem, Task, TaskRun, TaskRunItem, User
 
 
@@ -15,6 +17,7 @@ def test_reports_show_history_and_summaries(client) -> None:
             user_id=user.id,
             task_title_snapshot=task.title,
             user_name_snapshot=user.name,
+            completed_at=datetime(2026, 7, 5, 13, 16, tzinfo=timezone.utc),
         )
         session.add(task_run)
         session.flush()
@@ -33,4 +36,6 @@ def test_reports_show_history_and_summaries(client) -> None:
     assert response.status_code == 200
     assert "Close the office" in response.text
     assert "Taylor" in response.text
+    assert 'datetime="2026-07-05T13:16:00Z"' in response.text
+    assert "data-local-datetime" in response.text
     assert "1 completions" in response.text

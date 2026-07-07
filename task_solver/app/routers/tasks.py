@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import session_dependency
-from app.models import ChecklistItem, Task, TaskRun
+from app.models import ChecklistItem, Task, TaskRun, User
 from app.utils import resolve_return_to
 from app.web import templates
 
@@ -32,10 +32,19 @@ def load_recent_runs(session: Session):
     return list(result)
 
 
+def load_users(session: Session):
+    return list(session.scalars(select(User).order_by(User.name.asc())))
+
+
 def render_index(
     request: Request,
     session: Session,
     error: Optional[str] = None,
+    completion_error: Optional[str] = None,
+    active_task_id: Optional[int] = None,
+    selected_user_id: Optional[int] = None,
+    new_user_name: str = "",
+    checked_item_ids: Optional[set[int]] = None,
     status_code: int = status.HTTP_200_OK,
 ) -> HTMLResponse:
     message = None
@@ -58,8 +67,14 @@ def render_index(
         "index.html",
         {
             "tasks": load_tasks(session),
+            "users": load_users(session),
             "recent_runs": load_recent_runs(session),
             "error": error,
+            "completion_error": completion_error,
+            "active_task_id": active_task_id,
+            "selected_user_id": selected_user_id,
+            "new_user_name": new_user_name,
+            "checked_item_ids": checked_item_ids or set(),
             "message": message,
         },
         status_code=status_code,

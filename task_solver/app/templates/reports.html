@@ -24,7 +24,10 @@
             {% for run in recent_runs %}
             <li>
                 <strong>{{ run.task_title_snapshot }}</strong>
-                <span class="history-meta">Completed by {{ run.user_name_snapshot }} at {{ run.completed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                <span class="history-meta">
+                    Completed by {{ run.user_name_snapshot }} at
+                    <time datetime="{{ run.completed_at | utc_iso }}" data-local-datetime>{{ run.completed_at.strftime('%Y-%m-%d %H:%M') }}</time>
+                </span>
             </li>
             {% endfor %}
         </ul>

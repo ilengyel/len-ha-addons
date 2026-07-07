@@ -28,6 +28,10 @@ body {
     line-height: 1.45;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 a {
     color: inherit;
 }
@@ -125,6 +129,10 @@ p {
     gap: 0.85rem;
 }
 
+.board-stack {
+    align-content: start;
+}
+
 .board-layout {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
@@ -158,7 +166,7 @@ p {
 }
 
 .task-card {
-    overflow: hidden;
+    overflow: visible;
 }
 
 .task-card__summary {
@@ -167,7 +175,12 @@ p {
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.9rem 1rem;
+    border-radius: calc(1rem - 1px) calc(1rem - 1px) 0 0;
     background: linear-gradient(135deg, rgba(250, 239, 224, 0.95), rgba(245, 229, 205, 0.95));
+}
+
+.task-card:not(.is-open) .task-card__summary {
+    border-radius: calc(1rem - 1px);
 }
 
 .task-card__summary--board {
@@ -205,10 +218,19 @@ p {
 .task-card__launch {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 0.9rem;
     flex: 1 1 auto;
     min-width: 0;
     min-height: 3rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     text-decoration: none;
+    cursor: pointer;
 }
 
 .task-card__meta {
@@ -251,6 +273,11 @@ p {
 .task-card__body {
     padding: 0.95rem 1rem 1rem;
     border-top: 1px solid rgba(210, 189, 164, 0.65);
+    border-radius: 0 0 calc(1rem - 1px) calc(1rem - 1px);
+}
+
+.completion-panel {
+    background: rgba(255, 248, 239, 0.72);
 }
 
 .task-card__body h3 {
@@ -534,15 +561,21 @@ label {
     list-style: none;
 }
 
+.editor-menu summary::marker {
+    content: "";
+}
+
 .editor-menu summary::-webkit-details-marker {
     display: none;
 }
 
 .icon-button {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 2.5rem;
+    height: 2.5rem;
     min-width: 2.5rem;
     min-height: 2.5rem;
     padding: 0;
@@ -554,6 +587,9 @@ label {
 }
 
 .icon-button svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 1rem;
     height: 1rem;
     fill: none;
@@ -561,6 +597,7 @@ label {
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-width: 2;
+    transform: translate(-50%, -50%);
 }
 
 .editor-panel {
@@ -569,13 +606,27 @@ label {
     z-index: 1;
     display: grid;
     gap: 0.65rem;
-    min-width: min(22rem, calc(100vw - 4rem));
+    width: 18rem;
+    max-width: calc(100vw - 3rem);
     margin-top: 0.4rem;
     padding: 0.85rem;
     border: 1px solid var(--border);
     border-radius: 0.85rem;
     background: var(--paper-strong);
     box-shadow: var(--shadow);
+}
+
+.editor-panel .input-row {
+    flex-wrap: nowrap;
+}
+
+.editor-panel .input-row input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.editor-panel .input-row .button {
+    flex: 0 0 auto;
 }
 
 .sr-only {
@@ -606,10 +657,19 @@ label {
     .flow-header,
     .site-header,
     .site-footer,
-    .input-row,
     .split-row {
         flex-direction: column;
         align-items: stretch;
+    }
+
+    .input-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .editor-panel .input-row {
+        flex-direction: row;
+        align-items: center;
     }
 
     .task-card__start,
@@ -628,7 +688,8 @@ label {
     }
 
     .editor-panel {
-        position: static;
-        min-width: 0;
+        position: absolute;
+        width: 18rem;
+        max-width: calc(100vw - 3rem);
     }
 }

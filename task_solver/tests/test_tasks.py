@@ -21,20 +21,23 @@ def test_create_task_and_manage_checklist(client) -> None:
 
     assert f'id="task-{task_id}"' in create_response.text
     assert 'id="add-task"' in create_response.text
-    assert f'href="/tasks/{task_id}/complete"' in create_response.text
+    assert "data-completion-button" in create_response.text
+    assert f'data-completion-target="complete-task-{task_id}"' in create_response.text
     assert f'action="/tasks/{task_id}/edit"' in create_response.text
     assert f'action="/tasks/{task_id}/delete"' in create_response.text
+    assert f'action="/tasks/{task_id}/checklist"' in create_response.text
     assert 'name="domain"' not in create_response.text
     assert "Create a new board item" not in create_response.text
 
     add_response = client.post(
         f"/tasks/{task_id}/checklist",
-        data={"title": "Scrub the grates", "return_to": f"/tasks/{task_id}/complete#checklist"},
+        data={"title": "Scrub the grates", "return_to": f"/?updated=1#complete-task-{task_id}"},
         follow_redirects=True,
     )
 
     assert add_response.status_code == 200
-    assert f"Complete Clean grill" in add_response.text
+    assert "Checklist updated." in add_response.text
+    assert f'id="complete-task-{task_id}"' in add_response.text
 
     with client.app.state.session_factory() as session:
         item = session.scalar(select(ChecklistItem).where(ChecklistItem.task_id == task_id))
@@ -43,21 +46,21 @@ def test_create_task_and_manage_checklist(client) -> None:
         assert item.title == "Scrub the grates"
 
     home_response = client.get("/")
-    assert f'action="/tasks/{task_id}/checklist"' not in home_response.text
-    assert f'action="/tasks/{task_id}/checklist/{item_id}/edit"' not in home_response.text
-    assert "Edit checklist" not in home_response.text
+    assert f'action="/tasks/{task_id}/checklist"' in home_response.text
+    assert f'action="/tasks/{task_id}/checklist/{item_id}/edit"' in home_response.text
+    assert "Edit checklist item" in home_response.text
 
     edit_response = client.post(
         f"/tasks/{task_id}/checklist/{item_id}/edit",
         data={
             "title": "Scrub and oil the grates",
-            "return_to": f"/tasks/{task_id}/complete#checklist-item-{item_id}",
+            "return_to": f"/?updated=1#complete-task-{task_id}",
         },
         follow_redirects=True,
     )
 
     assert edit_response.status_code == 200
-    assert f"Complete Clean grill" in edit_response.text
+    assert "Checklist updated." in edit_response.text
 
     with client.app.state.session_factory() as session:
         edited = session.get(ChecklistItem, item_id)
@@ -65,12 +68,12 @@ def test_create_task_and_manage_checklist(client) -> None:
 
     delete_response = client.post(
         f"/tasks/{task_id}/checklist/{item_id}/delete",
-        data={"return_to": f"/tasks/{task_id}/complete#checklist"},
+        data={"return_to": f"/?updated=1#complete-task-{task_id}"},
         follow_redirects=True,
     )
 
     assert delete_response.status_code == 200
-    assert f"Complete Clean grill" in delete_response.text
+    assert "Checklist updated." in delete_response.text
 
     with client.app.state.session_factory() as session:
         deleted = session.get(ChecklistItem, item_id)
