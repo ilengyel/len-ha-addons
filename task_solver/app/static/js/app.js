@@ -1,6 +1,7 @@
 (function () {
     var root = document.documentElement;
     var toggle = document.querySelector('[data-theme-toggle]');
+    var toggleLabel = document.querySelector('[data-theme-toggle-label]');
     var themeColor = document.querySelector('[data-theme-color]');
     var storageKey = 'task-solver-theme';
 
@@ -18,7 +19,11 @@
         }
 
         toggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
-        toggle.textContent = isDark ? 'Light theme' : 'Dark theme';
+        toggle.setAttribute('aria-label', isDark ? 'Use light theme' : 'Use dark theme');
+        toggle.setAttribute('title', isDark ? 'Use light theme' : 'Use dark theme');
+        if (toggleLabel) {
+            toggleLabel.textContent = isDark ? 'Use light theme' : 'Use dark theme';
+        }
         if (themeColor) {
             themeColor.setAttribute('content', isDark ? '#17120f' : '#7f3018');
         }

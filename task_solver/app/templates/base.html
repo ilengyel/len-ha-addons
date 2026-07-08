@@ -32,7 +32,16 @@
                 <a href="{{ request.scope.get('root_path', '') or '/' }}">Board</a>
                 <a href="{{ request.scope.get('root_path', '') }}/reports">Reports</a>
                 <a href="{{ request.scope.get('root_path', '') }}/debug/uploads">Debug uploads</a>
-                <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Dark theme</button>
+                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Use dark theme" aria-pressed="false" title="Use dark theme">
+                    <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5z"></path>
+                    </svg>
+                    <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+                    </svg>
+                    <span class="sr-only" data-theme-toggle-label>Use dark theme</span>
+                </button>
             </nav>
         </header>
 
