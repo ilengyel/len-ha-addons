@@ -470,6 +470,11 @@ label {
     border: 1px solid var(--border);
 }
 
+.button-ghost:hover,
+.button-ghost:focus {
+    background: var(--accent-soft);
+}
+
 .button-small {
     min-height: 2.4rem;
     padding: 0.45rem 0.8rem;
