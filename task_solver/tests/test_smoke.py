@@ -19,6 +19,10 @@ def test_index_renders() -> None:
     assert 'rel="apple-touch-icon"' in response.text
     assert '/static/favicon.svg' in response.text
     assert '/static/apple-touch-icon.png' in response.text
+    assert 'aria-label="Settings"' in response.text
+    assert 'href="/reports"' in response.text
+    assert 'href="/debug/uploads"' in response.text
+    assert ">Board</a>" not in response.text
     assert 'data-theme-toggle' in response.text
     assert 'Use dark theme' in response.text
     assert 'theme-toggle__icon--moon' in response.text
