@@ -19,6 +19,8 @@ def test_index_renders() -> None:
     assert 'rel="apple-touch-icon"' in response.text
     assert '/static/favicon.svg' in response.text
     assert '/static/apple-touch-icon.png' in response.text
+    assert 'data-theme-toggle' in response.text
+    assert 'Dark theme' in response.text
     assert favicon.status_code == 200
     assert "<svg" in favicon.text
     assert apple_touch_icon.status_code == 200
