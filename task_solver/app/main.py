@@ -6,6 +6,7 @@ from typing import Optional
 
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, text
 
 from app.db import create_session_factory
 from app.models import Base
@@ -14,6 +15,19 @@ from app.seed import seed_default_data
 from app.web import STATIC_DIR, build_debug_upload_dir
 
 logger = logging.getLogger("uvicorn.error")
+
+
+def ensure_task_columns(engine) -> None:
+    existing_columns = {column["name"] for column in inspect(engine).get_columns("tasks")}
+    required_columns = {
+        "suggested_duration_minutes": "INTEGER",
+        "details": "TEXT",
+    }
+
+    with engine.begin() as connection:
+        for column_name, column_type in required_columns.items():
+            if column_name not in existing_columns:
+                connection.execute(text(f"ALTER TABLE tasks ADD COLUMN {column_name} {column_type}"))
 
 
 class IngressASGIMiddleware:
@@ -46,6 +60,7 @@ def create_app(database_url: Optional[str] = None, seed_defaults: bool = True) -
         app.state.engine = engine
         app.state.session_factory = session_factory
         Base.metadata.create_all(bind=engine)
+        ensure_task_columns(engine)
         if seed_defaults:
             with session_factory() as session:
                 seed_default_data(session)

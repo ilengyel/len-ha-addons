@@ -326,6 +326,13 @@ p {
     color: var(--muted);
 }
 
+.task-card__details {
+    margin: 0.3rem 0 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
+}
+
 .task-card__chevron {
     width: 0.7rem;
     height: 0.7rem;
@@ -496,13 +503,19 @@ textarea {
 }
 
 input,
-select {
+select,
+textarea {
     min-height: 2.8rem;
     border: 1px solid var(--border);
     border-radius: 0.8rem;
     padding: 0.65rem 0.8rem;
     background: var(--input-bg);
     color: var(--ink);
+}
+
+textarea {
+    min-height: 5rem;
+    resize: vertical;
 }
 
 .input-row input,

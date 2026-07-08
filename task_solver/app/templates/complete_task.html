@@ -9,8 +9,16 @@
         <div>
             <p class="eyebrow">Completion flow</p>
             <h1>{{ task.title }}</h1>
+            {% if task.details %}
+            <p class="task-card__details">{{ task.details }}</p>
+            {% endif %}
         </div>
-        <span class="pill">{{ task.domain }}</span>
+        <span class="pill">
+            {{ task.domain }}
+            {% if task.suggested_duration_minutes %}
+            · {{ task.suggested_duration_minutes }} min
+            {% endif %}
+        </span>
     </div>
 
     {% if error %}
