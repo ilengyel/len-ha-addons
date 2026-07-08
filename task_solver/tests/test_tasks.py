@@ -6,7 +6,12 @@ from app.models import ChecklistItem, Task, TaskRun, TaskRunItem, User
 def test_create_task_and_manage_checklist(client) -> None:
     create_response = client.post(
         "/tasks",
-        data={"title": "Clean grill", "domain": "Household"},
+        data={
+            "title": "Clean grill",
+            "domain": "Maintenance",
+            "suggested_duration_minutes": "25",
+            "details": "Use the wire brush before rinsing.",
+        },
         follow_redirects=True,
     )
 
@@ -16,6 +21,9 @@ def test_create_task_and_manage_checklist(client) -> None:
     with client.app.state.session_factory() as session:
         task = session.scalar(select(Task).where(Task.title == "Clean grill"))
         assert task is not None
+        assert task.domain == "Maintenance"
+        assert task.suggested_duration_minutes == 25
+        assert task.details == "Use the wire brush before rinsing."
 
         task_id = task.id
 
@@ -26,7 +34,27 @@ def test_create_task_and_manage_checklist(client) -> None:
     assert f'action="/tasks/{task_id}/edit"' in create_response.text
     assert f'action="/tasks/{task_id}/delete"' in create_response.text
     assert f'action="/tasks/{task_id}/checklist"' in create_response.text
-    assert 'name="domain"' not in create_response.text
+    assert 'name="domain"' in create_response.text
+    assert "Category/domain" not in create_response.text
+    assert "Suggested duration" not in create_response.text
+    assert '<label for="task-domain">Category</label>' in create_response.text
+    assert f'<label for="task-{task_id}-domain">Category</label>' in create_response.text
+    assert '<label for="task-duration">Duration</label>' in create_response.text
+    assert f'<label for="task-{task_id}-duration">Duration</label>' in create_response.text
+    assert 'class="field-grid"' in create_response.text
+    assert 'class="editor-actions"' in create_response.text
+    assert f'form="task-{task_id}-edit-form">Save</button>' in create_response.text
+    assert 'name="suggested_duration_minutes"' in create_response.text
+    assert 'name="details"' in create_response.text
+    assert "Maintenance" in create_response.text
+    assert "25 min" in create_response.text
+    assert "Use the wire brush before rinsing." in create_response.text
+    task_card_start = create_response.text.index(f'id="task-{task_id}"')
+    task_body_start = create_response.text.index(f'id="complete-task-{task_id}"')
+    task_summary_markup = create_response.text[task_card_start:task_body_start]
+    task_body_markup = create_response.text[task_body_start:]
+    assert 'class="task-card__details"' not in task_summary_markup
+    assert '<p class="task-card__details">Use the wire brush before rinsing.</p>' in task_body_markup
     assert "Create a new board item" not in create_response.text
 
     add_response = client.post(
@@ -81,17 +109,26 @@ def test_create_task_and_manage_checklist(client) -> None:
 
     rename_response = client.post(
         f"/tasks/{task_id}/edit",
-        data={"title": "Clean smoker", "return_to": f"/?renamed=1#task-{task_id}"},
+        data={
+            "title": "Clean smoker",
+            "domain": "Household",
+            "suggested_duration_minutes": "40",
+            "details": "Empty the ash tray first.",
+            "return_to": f"/?renamed=1#task-{task_id}",
+        },
         follow_redirects=True,
     )
 
     assert rename_response.status_code == 200
-    assert "Task renamed." in rename_response.text
+    assert "Task updated." in rename_response.text
 
     with client.app.state.session_factory() as session:
         renamed = session.get(Task, task_id)
         assert renamed is not None
         assert renamed.title == "Clean smoker"
+        assert renamed.domain == "Household"
+        assert renamed.suggested_duration_minutes == 40
+        assert renamed.details == "Empty the ash tray first."
 
     delete_task_response = client.post(
         f"/tasks/{task_id}/delete",
@@ -140,3 +177,32 @@ def test_board_shows_recent_completions(client) -> None:
     assert "Recently completed" in response.text
     assert "Close the office" in response.text
     assert "Taylor" in response.text
+
+
+def test_edit_task_accepts_duration_with_blank_details(client) -> None:
+    with client.app.state.session_factory() as session:
+        task = Task(title="Take bins out", domain="Household", details="Existing notes")
+        session.add(task)
+        session.commit()
+        task_id = task.id
+
+    response = client.post(
+        f"/tasks/{task_id}/edit",
+        data={
+            "title": "Take bins out",
+            "domain": "Household",
+            "suggested_duration_minutes": "5",
+            "details": "",
+            "return_to": f"/?renamed=1#task-{task_id}",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert "Task updated." in response.text
+
+    with client.app.state.session_factory() as session:
+        updated = session.get(Task, task_id)
+        assert updated is not None
+        assert updated.suggested_duration_minutes == 5
+        assert updated.details == ""

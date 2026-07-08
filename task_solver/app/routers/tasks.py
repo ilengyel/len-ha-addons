@@ -16,6 +16,26 @@ from app.web import templates
 router = APIRouter()
 
 
+def normalize_domain(domain: str) -> str:
+    trimmed = domain.strip()
+    return trimmed[:100] if trimmed else "Household"
+
+
+def parse_suggested_duration(value: str) -> Optional[int]:
+    trimmed = value.strip()
+    if not trimmed:
+        return None
+    if not trimmed.isdigit():
+        return None
+    duration = int(trimmed)
+    return duration if duration > 0 else None
+
+
+def normalize_details(details: str) -> str:
+    trimmed = details.strip()
+    return trimmed
+
+
 def load_tasks(session: Session):
     result = session.scalars(
         select(Task)
@@ -54,7 +74,7 @@ def render_index(
     elif request.query_params.get("completed") == "1":
         message = "Completion recorded."
     elif request.query_params.get("renamed") == "1":
-        message = "Task renamed."
+        message = "Task updated."
     elif request.query_params.get("deleted") == "1":
         message = "Task removed."
     elif request.query_params.get("updated") == "1":
@@ -76,6 +96,7 @@ def render_index(
             "new_user_name": new_user_name,
             "checked_item_ids": checked_item_ids or set(),
             "message": message,
+            "domain_options": ["Household", "Maintenance", "Office", "Workshop", "Errands", "School", "Other"],
         },
         status_code=status_code,
     )
@@ -90,13 +111,20 @@ def index(request: Request, session: Session = Depends(session_dependency)) -> H
 def create_task(
     title: str = Form(...),
     domain: str = Form("Household"),
+    suggested_duration_minutes: str = Form(""),
+    details: str = Form(""),
     session: Session = Depends(session_dependency),
 ) -> RedirectResponse:
     trimmed_title = title.strip()
     if not trimmed_title:
         return RedirectResponse(url="/?error=title#add-task", status_code=status.HTTP_303_SEE_OTHER)
 
-    task = Task(title=trimmed_title, domain=domain or "Household")
+    task = Task(
+        title=trimmed_title,
+        domain=normalize_domain(domain),
+        suggested_duration_minutes=parse_suggested_duration(suggested_duration_minutes),
+        details=normalize_details(details),
+    )
     session.add(task)
     session.commit()
     return RedirectResponse(url=f"/?created=1#task-{task.id}", status_code=status.HTTP_303_SEE_OTHER)
@@ -106,6 +134,9 @@ def create_task(
 def edit_task(
     task_id: int,
     title: str = Form(...),
+    domain: str = Form("Household"),
+    suggested_duration_minutes: str = Form(""),
+    details: str = Form(""),
     return_to: str = Form("/"),
     session: Session = Depends(session_dependency),
 ) -> RedirectResponse:
@@ -119,7 +150,10 @@ def edit_task(
     trimmed_title = title.strip()
     if trimmed_title:
         task.title = trimmed_title
-        session.commit()
+    task.domain = normalize_domain(domain)
+    task.suggested_duration_minutes = parse_suggested_duration(suggested_duration_minutes)
+    task.details = normalize_details(details)
+    session.commit()
 
     default_url = f"/?renamed=1#task-{task_id}"
     return RedirectResponse(

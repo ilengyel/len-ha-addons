@@ -19,10 +19,24 @@
         <div class="editor-panel">
             <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks" method="post">
                 <label for="task-title">Task title</label>
-                <div class="input-row">
-                    <input id="task-title" name="title" type="text" maxlength="200" placeholder="Example: Clean the pool" required>
-                    <button class="button button-small" type="submit">Add</button>
+                <input id="task-title" name="title" type="text" maxlength="200" placeholder="Example: Clean the pool" required>
+                <div class="field-grid">
+                    <div class="field">
+                        <label for="task-domain">Category</label>
+                        <select id="task-domain" name="domain">
+                            {% for domain_option in domain_options %}
+                            <option value="{{ domain_option }}" {% if domain_option == "Household" %}selected{% endif %}>{{ domain_option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="task-duration">Duration</label>
+                        <input id="task-duration" name="suggested_duration_minutes" type="number" min="1" step="1" inputmode="numeric" placeholder="Minutes">
+                    </div>
                 </div>
+                <label for="task-details">Details</label>
+                <textarea id="task-details" name="details" rows="3" placeholder="Notes, expectations, or helpful context"></textarea>
+                <button class="button button-small" type="submit">Add</button>
             </form>
         </div>
     </details>
@@ -54,7 +68,12 @@
                     >
                         <div class="task-card__heading">
                             <h2>{{ task.title }}</h2>
-                            <p class="task-card__meta">{{ task.domain }}</p>
+                            <p class="task-card__meta">
+                                {{ task.domain }}
+                                {% if task.suggested_duration_minutes %}
+                                · {{ task.suggested_duration_minutes }} min
+                                {% endif %}
+                            </p>
                         </div>
                         <span class="task-card__chevron" aria-hidden="true"></span>
                     </button>
@@ -67,18 +86,46 @@
                             <span class="sr-only">Edit {{ task.title }}</span>
                         </summary>
                         <div class="editor-panel">
-                            <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/edit" method="post">
+                            <form id="task-{{ task.id }}-edit-form" class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/edit" method="post">
                                 <input type="hidden" name="return_to" value="/?renamed=1#task-{{ task.id }}">
-                                <label for="task-{{ task.id }}-title">Rename task</label>
-                                <div class="input-row">
-                                    <input id="task-{{ task.id }}-title" name="title" type="text" value="{{ task.title }}" maxlength="200" required>
-                                    <button class="button button-small" type="submit">Save</button>
+                                <label for="task-{{ task.id }}-title">Task title</label>
+                                <input id="task-{{ task.id }}-title" name="title" type="text" value="{{ task.title }}" maxlength="200" required>
+                                <div class="field-grid">
+                                    <div class="field">
+                                        <label for="task-{{ task.id }}-domain">Category</label>
+                                        <select id="task-{{ task.id }}-domain" name="domain">
+                                            {% if task.domain not in domain_options %}
+                                            <option value="{{ task.domain }}" selected>{{ task.domain }}</option>
+                                            {% endif %}
+                                            {% for domain_option in domain_options %}
+                                            <option value="{{ domain_option }}" {% if domain_option == task.domain %}selected{% endif %}>{{ domain_option }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label for="task-{{ task.id }}-duration">Duration</label>
+                                        <input
+                                            id="task-{{ task.id }}-duration"
+                                            name="suggested_duration_minutes"
+                                            type="number"
+                                            min="1"
+                                            step="1"
+                                            inputmode="numeric"
+                                            value="{{ task.suggested_duration_minutes or '' }}"
+                                            placeholder="Minutes"
+                                        >
+                                    </div>
                                 </div>
+                                <label for="task-{{ task.id }}-details">Details</label>
+                                <textarea id="task-{{ task.id }}-details" name="details" rows="3" placeholder="Notes, expectations, or helpful context">{{ task.details or '' }}</textarea>
                             </form>
-                            <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/delete" method="post">
-                                <input type="hidden" name="return_to" value="/?deleted=1">
-                                <button class="button button-ghost button-small" type="submit">Remove</button>
-                            </form>
+                            <div class="editor-actions">
+                                <button class="button button-small" type="submit" form="task-{{ task.id }}-edit-form">Save</button>
+                                <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/delete" method="post">
+                                    <input type="hidden" name="return_to" value="/?deleted=1">
+                                    <button class="button button-ghost button-small" type="submit">Remove</button>
+                                </form>
+                            </div>
                         </div>
                     </details>
                 </div>
@@ -91,6 +138,10 @@
                 >
                     {% if task_is_active and completion_error %}
                     <section class="notice error">{{ completion_error }}</section>
+                    {% endif %}
+
+                    {% if task.details %}
+                    <p class="task-card__details">{{ task.details }}</p>
                     {% endif %}
 
                     <div class="run-form">
@@ -232,25 +283,25 @@
                                                 <span class="sr-only">Edit {{ item.title }}</span>
                                             </summary>
                                             <div class="editor-panel">
-                                                <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
+                                                <form id="item-{{ item.id }}-edit-form" class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
                                                     <input type="hidden" name="return_to" value="/?updated=1#complete-task-{{ task.id }}">
                                                     <label for="item-{{ item.id }}-title">Edit checklist item</label>
-                                                    <div class="input-row">
-                                                        <input
-                                                            id="item-{{ item.id }}-title"
-                                                            name="title"
-                                                            type="text"
-                                                            value="{{ item.title }}"
-                                                            maxlength="200"
-                                                            required
-                                                        >
-                                                        <button class="button button-small" type="submit">Save</button>
-                                                    </div>
+                                                    <input
+                                                        id="item-{{ item.id }}-title"
+                                                        name="title"
+                                                        type="text"
+                                                        value="{{ item.title }}"
+                                                        maxlength="200"
+                                                        required
+                                                    >
                                                 </form>
-                                                <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
-                                                    <input type="hidden" name="return_to" value="/?updated=1#complete-task-{{ task.id }}">
-                                                    <button class="button button-ghost button-small" type="submit">Remove</button>
-                                                </form>
+                                                <div class="editor-actions">
+                                                    <button class="button button-small" type="submit" form="item-{{ item.id }}-edit-form">Save</button>
+                                                    <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
+                                                        <input type="hidden" name="return_to" value="/?updated=1#complete-task-{{ task.id }}">
+                                                        <button class="button button-ghost button-small" type="submit">Remove</button>
+                                                    </form>
+                                                </div>
                                             </div>
                                         </details>
                                     </div>

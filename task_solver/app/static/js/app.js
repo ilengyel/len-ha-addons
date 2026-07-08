@@ -1,4 +1,48 @@
 (function () {
+    var root = document.documentElement;
+    var toggle = document.querySelector('[data-theme-toggle]');
+    var toggleLabel = document.querySelector('[data-theme-toggle-label]');
+    var themeColor = document.querySelector('[data-theme-color]');
+    var storageKey = 'task-solver-theme';
+
+    if (!toggle) {
+        return;
+    }
+
+    function setTheme(theme) {
+        var isDark = theme === 'dark';
+
+        if (isDark) {
+            root.setAttribute('data-theme', 'dark');
+        } else {
+            root.removeAttribute('data-theme');
+        }
+
+        toggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+        toggle.setAttribute('aria-label', isDark ? 'Use light theme' : 'Use dark theme');
+        toggle.setAttribute('title', isDark ? 'Use light theme' : 'Use dark theme');
+        if (toggleLabel) {
+            toggleLabel.textContent = isDark ? 'Use light theme' : 'Use dark theme';
+        }
+        if (themeColor) {
+            themeColor.setAttribute('content', isDark ? '#17120f' : '#7f3018');
+        }
+    }
+
+    function saveTheme(theme) {
+        window.localStorage.setItem(storageKey, theme);
+    }
+
+    setTheme(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+
+    toggle.addEventListener('click', function () {
+        var nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        setTheme(nextTheme);
+        saveTheme(nextTheme);
+    });
+}());
+
+(function () {
     var timestamps = document.querySelectorAll('[data-local-datetime]');
 
     function pad(value) {

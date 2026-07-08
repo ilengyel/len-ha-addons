@@ -9,8 +9,16 @@
         <div>
             <p class="eyebrow">Completion flow</p>
             <h1>{{ task.title }}</h1>
+            {% if task.details %}
+            <p class="task-card__details">{{ task.details }}</p>
+            {% endif %}
         </div>
-        <span class="pill">{{ task.domain }}</span>
+        <span class="pill">
+            {{ task.domain }}
+            {% if task.suggested_duration_minutes %}
+            · {{ task.suggested_duration_minutes }} min
+            {% endif %}
+        </span>
     </div>
 
     {% if error %}
@@ -158,25 +166,25 @@
                                 <span class="sr-only">Edit {{ item.title }}</span>
                             </summary>
                             <div class="editor-panel">
-                                <form class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
+                                <form id="item-{{ item.id }}-edit-form" class="stack-form" action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/edit" method="post">
                                     <input type="hidden" name="return_to" value="/tasks/{{ task.id }}/complete#checklist-item-{{ item.id }}">
                                     <label for="item-{{ item.id }}-title">Edit checklist item</label>
-                                    <div class="input-row">
-                                        <input
-                                            id="item-{{ item.id }}-title"
-                                            name="title"
-                                            type="text"
-                                            value="{{ item.title }}"
-                                            maxlength="200"
-                                            required
-                                        >
-                                        <button class="button button-small" type="submit">Save</button>
-                                    </div>
+                                    <input
+                                        id="item-{{ item.id }}-title"
+                                        name="title"
+                                        type="text"
+                                        value="{{ item.title }}"
+                                        maxlength="200"
+                                        required
+                                    >
                                 </form>
-                                <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
-                                    <input type="hidden" name="return_to" value="/tasks/{{ task.id }}/complete#checklist">
-                                    <button class="button button-ghost button-small" type="submit">Remove</button>
-                                </form>
+                                <div class="editor-actions">
+                                    <button class="button button-small" type="submit" form="item-{{ item.id }}-edit-form">Save</button>
+                                    <form action="{{ request.scope.get('root_path', '') }}/tasks/{{ task.id }}/checklist/{{ item.id }}/delete" method="post">
+                                        <input type="hidden" name="return_to" value="/tasks/{{ task.id }}/complete#checklist">
+                                        <button class="button button-ghost button-small" type="submit">Remove</button>
+                                    </form>
+                                </div>
                             </div>
                         </details>
                     </div>

@@ -4,7 +4,7 @@ Current region handles you can use:
 |---|---|
 | `site header` | Top app area with brand and navigation links |
 | `brand` | “Household and beyond / Task Solver” link |
-| `primary nav` | Board, Reports, Debug uploads links |
+| `settings menu` | Gear icon menu with Reports, Debug uploads, and theme toggle |
 | `hero` | Top board intro and add-task button area |
 | `add task menu` | Plus menu for creating a new task |
 | `board` | Main task list area |
