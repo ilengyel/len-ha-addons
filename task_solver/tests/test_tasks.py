@@ -35,11 +35,26 @@ def test_create_task_and_manage_checklist(client) -> None:
     assert f'action="/tasks/{task_id}/delete"' in create_response.text
     assert f'action="/tasks/{task_id}/checklist"' in create_response.text
     assert 'name="domain"' in create_response.text
+    assert "Category/domain" not in create_response.text
+    assert "Suggested duration" not in create_response.text
+    assert '<label for="task-domain">Category</label>' in create_response.text
+    assert f'<label for="task-{task_id}-domain">Category</label>' in create_response.text
+    assert '<label for="task-duration">Duration</label>' in create_response.text
+    assert f'<label for="task-{task_id}-duration">Duration</label>' in create_response.text
+    assert 'class="field-grid"' in create_response.text
+    assert 'class="editor-actions"' in create_response.text
+    assert f'form="task-{task_id}-edit-form">Save</button>' in create_response.text
     assert 'name="suggested_duration_minutes"' in create_response.text
     assert 'name="details"' in create_response.text
     assert "Maintenance" in create_response.text
     assert "25 min" in create_response.text
     assert "Use the wire brush before rinsing." in create_response.text
+    task_card_start = create_response.text.index(f'id="task-{task_id}"')
+    task_body_start = create_response.text.index(f'id="complete-task-{task_id}"')
+    task_summary_markup = create_response.text[task_card_start:task_body_start]
+    task_body_markup = create_response.text[task_body_start:]
+    assert 'class="task-card__details"' not in task_summary_markup
+    assert '<p class="task-card__details">Use the wire brush before rinsing.</p>' in task_body_markup
     assert "Create a new board item" not in create_response.text
 
     add_response = client.post(

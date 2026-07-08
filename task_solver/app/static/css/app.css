@@ -58,6 +58,12 @@ html, body {
     color: var(--ink);
 }
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
     line-height: 1.45;
 }
@@ -427,6 +433,18 @@ p {
     align-items: center;
 }
 
+.field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+.field {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
 .who-section {
     border-top: 1px solid var(--subtle-border);
     padding-top: 0.85rem;
@@ -489,10 +507,15 @@ p {
 }
 
 .input-row,
+.editor-actions,
 .split-row {
     display: flex;
     gap: 0.65rem;
     align-items: center;
+}
+
+.editor-actions {
+    justify-content: flex-end;
 }
 
 input,
@@ -519,7 +542,9 @@ textarea {
 }
 
 .input-row input,
-.inline-edit input {
+.inline-edit input,
+.field input,
+.field select {
     min-width: 0;
     width: 100%;
 }
