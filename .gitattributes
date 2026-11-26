@@ -1,2 +1,3 @@
 # Force LF line endings for all scripts in the rootfs directory
 task_solver/rootfs/**/* text eol=lf
+valetudo_proxy/rootfs/**/* text eol=lf

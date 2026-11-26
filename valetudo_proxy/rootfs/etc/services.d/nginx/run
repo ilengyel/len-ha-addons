@@ -1,0 +1,29 @@
+#!/usr/bin/with-contenv bashio
+set -euo pipefail
+
+export ROBOT_HOST ROBOT_PORT DNS_SERVER
+if ! ROBOT_HOST="$(jq -er '.robot_host | select(type == "string")' /data/options.json)" \
+    || [[ ! "${ROBOT_HOST}" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]{0,251}[a-zA-Z0-9])?$ ]]; then
+    bashio::exit.nok "robot_host must be an IPv4 address or hostname, without a scheme, port, or path."
+fi
+
+if ! ROBOT_PORT="$(jq -er '.robot_port | select(type == "number")' /data/options.json)" \
+    || [[ ! "${ROBOT_PORT}" =~ ^[0-9]{1,5}$ ]] \
+    || (( 10#${ROBOT_PORT} < 1 || 10#${ROBOT_PORT} > 65535 )); then
+    bashio::exit.nok "robot_port must be between 1 and 65535."
+fi
+ROBOT_PORT="$((10#${ROBOT_PORT}))"
+
+DNS_SERVER="$(awk '/^nameserver / { print $2; exit }' /etc/resolv.conf)"
+if [[ -z "${DNS_SERVER}" ]]; then
+    bashio::exit.nok "No DNS resolver is configured for the add-on."
+fi
+if [[ "${DNS_SERVER}" == *:* ]]; then
+    DNS_SERVER="[${DNS_SERVER}]"
+fi
+
+envsubst '${ROBOT_HOST} ${ROBOT_PORT} ${DNS_SERVER}' \
+    < /etc/nginx/templates/ingress.conf.template > /etc/nginx/nginx.conf
+nginx -t
+bashio::log.info "Proxying Valetudo at http://${ROBOT_HOST}:${ROBOT_PORT} through Home Assistant ingress."
+exec nginx -g 'daemon off;'

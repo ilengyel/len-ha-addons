@@ -1,8 +1,12 @@
 # ha-addons
 
-This repository is a Home Assistant add-on repository prepared for Git-based installation. The current add-on lives in `task_solver\`.
+This repository contains Home Assistant add-ons for Git-based installation.
 
 ## Included add-ons
+
+### `valetudo_proxy`
+
+Opens an existing robot's Valetudo web interface inside Home Assistant through an ingress-only Nginx proxy. The robot address is configurable, no host port is exposed, and existing vacuum/MQTT integrations are unchanged.
 
 ### `task_solver`
 
@@ -18,10 +22,16 @@ It provides:
 
 ## Local development
 
-Run tests from the repository root:
+Run tests from the repository root (Docker must be running for the proxy tests):
 
 ```powershell
 python -m pytest -q
+```
+
+Valetudo Proxy's container tests require a running Docker engine:
+
+```powershell
+python -m pytest valetudo_proxy\tests -q
 ```
 
 ## Publishing note
